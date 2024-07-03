@@ -238,26 +238,35 @@ window#waybar > * {
 
 #workspaces {
 	background-color: black;
+	margin-left: 20px;
+	margin-right: 20px;
 }
 
 #workspaces button {
-	color: white;
-}
-
-#workspaces button:hover {
-	color: black;
+	font-size: 24px;
+	font-weight: 900;
 }
 
 #workspaces button.visible {
-	background-color: red;
+	background-color: #E8A2AF;
+	color: black;
+}
+
+#workspaces button.visible.empty {
+	color: #808080;
 }
 
 #workspaces button.active {
-	background-color: purple;
+	background-color: #C9CBFF;
+	color: black;
+}
+
+#workspaces button.active.empty {
+	color: #808080;
 }
 
 #workspaces button.empty {
-	color: gray;
+	color: #414141;
 }
 
 #language {

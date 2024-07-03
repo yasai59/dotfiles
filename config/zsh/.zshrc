@@ -75,7 +75,7 @@ plugins=(git zsh-autosuggestions sudo zsh-syntax-highlighting)
 source $ZSH/oh-my-zsh.sh
 
 export OPENCV_LOG_LEVEL=ERROR
-fastfetch --logo "~/Pictures/images/fastfetch.png" 
+fastfetch
 
 # User configuration
 
