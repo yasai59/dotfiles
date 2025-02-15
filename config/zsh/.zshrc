@@ -13,8 +13,8 @@ fastfetch
 alias ls="lsd"
 alias cat="bat"
 alias work="cd ~/Documents/work"
-alias update="paru -Syu && flatpak update"
-alias purge="paru -Qdtq | paru -R - && flatpak uninstall --unused"
+alias update="yay -Syu && flatpak update"
+alias purge="yay -Qdtq | paru -R - && flatpak uninstall --unused"
 alias vim="nvim"
 
 bindkey -s '^F' tmux-sessionizer^M
@@ -25,3 +25,6 @@ bindkey -s '^F' tmux-sessionizer^M
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+export PATH=$PATH:/home/yasai/.spicetify
+export PATH=/home/yasai/.local/bin:/home/yasai/.bun/bin:/home/yasai/dotfiles/scripts:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/yasai/.spicetify
