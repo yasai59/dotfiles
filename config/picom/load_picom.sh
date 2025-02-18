@@ -1,4 +1,4 @@
 #!/bin/zsh
 
 killall picom
-picom --config ~/.config/picom/picom.conf
+picom -f --config ~/.config/picom/picom.conf
