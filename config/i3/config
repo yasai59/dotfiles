@@ -35,7 +35,7 @@ bindsym $mod+p exec zsh ~/.config/picom/toggle_picom.sh
 #####################################
 # Windows management
 #####################################
-focus_follows_mouse no
+# focus_follows_mouse no
 
 # change focus
 bindsym $mod+j focus left
