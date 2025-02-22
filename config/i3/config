@@ -8,7 +8,7 @@ font pango:monospace 8
 # autostart .desktop files
 exec --no-startup-id dex --autostart --environment i3
 # Lockscreen
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+# exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 # Wallpaper (nitrogen)
 exec --no-startup-id nitrogen --restore
 # NetworkManager
@@ -35,6 +35,7 @@ bindsym $mod+p exec zsh ~/.config/picom/toggle_picom.sh
 #####################################
 # Windows management
 #####################################
+focus_follows_mouse no
 
 # change focus
 bindsym $mod+j focus left
