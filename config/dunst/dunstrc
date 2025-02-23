@@ -353,7 +353,7 @@
     frame_color = "#5c5c5c"
     #frame_color = "#f5c2e7"
     icon = "/home/yasai/.config/dunst/icons/low.svg"
-    timeout = 0
+    timeout = 5
     # Icon for notifications with low urgency, uncomment to enable
     #default_icon = /path/to/icon
 
@@ -364,7 +364,7 @@
     frame_color = "#5c5c5c"
     #frame_color = "#b4befe"
     icon = "/home/yasai/.config/dunst/icons/pokeball.svg"
-    timeout = 0
+    timeout = 5
     # Icon for notifications with normal urgency, uncomment to enable
     #default_icon = /path/to/icon
 

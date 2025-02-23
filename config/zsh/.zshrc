@@ -16,7 +16,6 @@ alias work="cd ~/Documents/work"
 alias update="yay -Syu && flatpak update"
 alias purge="yay -Qdtq | paru -R - && flatpak uninstall --unused"
 alias vim="nvim"
-
 bindkey -s '^F' tmux-sessionizer^M
 
 # bun completions
