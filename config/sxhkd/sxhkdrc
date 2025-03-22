@@ -8,22 +8,22 @@ super + Return
 
 # Web browser
 alt + shift + f 
-	brave
+	firefox
 
 # flameshot (Screenshots)
 shift + alt + s
 	flameshot gui
 
-super + p
-	zsh ~/.config/picom/toggle_picom.sh
-
 # program launcher
 super + d
-	sh ~/.config/i3/scripts/toggleRofi.sh
+	/home/yasai/.config/rofi/launchers/type-4/launcher.sh
 
 # make sxhkd reload its configuration files:
 super + Escape
 	pkill -USR1 -x sxhkd
+
+super + space
+	setxkbmap -layout us,es -option 'grp:win_space_toggle'
 
 #
 # bspwm hotkeys
@@ -71,20 +71,10 @@ super + ctrl + {m,x,y,z}
 #
 
 # focus the node in the given direction
-super + {Left, Down, Up, Right}
+super + {h, j, k, l}
 	dir={west,south,north,east}; zsh ~/.config/sxhkd/change-focus.sh "$dir"
 
-	#if bspc query -N -n .focused.monitor.$dir | grep -q .; then
-  #  bspc node "$dir" -f
-  #else
-    # Si no hay ventana en la dirección, ir al monitor central
-  #  bspc monitor "$dir" -f
-  #fi
-
-
-		# bspc node -f {west,south,north,east}
-
-super + shift + {Left,Down,Up,Right}
+super + shift + {h,j,k,l}
 	dir={west,south,north,east}; \
 	bspc node -s "$dir.local" --follow \
 	    || bspc node -m "$dir" --follow
@@ -118,10 +108,6 @@ super + {_,shift + }{1-9,0}
 #
 # preselect
 #
-
-# preselect the direction
-super + ctrl + {Left, Down, Up, Right}
-	bspc node -p {west,south,north,east}
 
 # preselect the ratio
 super + ctrl + {1-9}

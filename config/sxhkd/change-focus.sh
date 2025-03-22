@@ -11,4 +11,3 @@ if [[ "$actMon" == *0x* && "$actMon" == "$monDir" ]]; then
 else
     bspc monitor "$1" -f  # Cambiar al monitor especificado
 fi
-

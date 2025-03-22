@@ -1,5 +1,4 @@
 #! /bin/sh
-pgrep -x sxhkd > /dev/null || sxhkd &
 
 # MONITOR WORKSPACES
 bspc monitor DP-2 -d 1 2 3 
@@ -26,12 +25,18 @@ bspc rule -a mplayer2 state=floating
 bspc rule -a Kupfer.py focus=on
 bspc rule -a Screenkey manage=off
 
-bspc rule -a vesktop desktop=7
 bspc rule -a spotify desktop=8
+bspc rule -a vesktop desktop=7
+bspc rule -a discord desktop=7
 bspc rule -a steam_app_* desktop=3 follow=on state=fullscreen
 bspc rule -a osu!.exe desktop=3 follow=on state=fullscreen
 bspc rule -a steam desktop=3
 
 zsh ~/.config/bspwm/scripts/startUp.sh &
 # es una guarrada pero con esto pongo el monitor DP-2 como primario
-sleep 1; xrandr --output DP-2 --primary
+lxappearance &
+sleep 1
+killall lxappearance
+xrandr --output DP-2 --primary
+xrandr --output DP-2 --mode 2560x1440 --rate 165
+xrandr --output DP-0 --mode 1920x1080 --rate 144
