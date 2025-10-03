@@ -27,3 +27,6 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 export PATH=$PATH:/home/yasai/.spicetify
 export PATH=/home/yasai/.local/bin:/home/yasai/.bun/bin:/home/yasai/dotfiles/scripts:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/yasai/.spicetify
+
+# Flutter
+export PATH="$HOME/.flutter/flutter/bin:$PATH"
