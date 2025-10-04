@@ -1,5 +1,6 @@
 export ZSH="$HOME/.oh-my-zsh"
 export PATH="$HOME/dotfiles/scripts:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 ZSH_THEME="kafeitu"
 
