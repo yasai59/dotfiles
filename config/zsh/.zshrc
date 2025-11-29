@@ -17,6 +17,7 @@ alias work="cd ~/Documents/work"
 alias update="yay -Syu && flatpak update"
 alias purge="yay -Qdtq | paru -R - && flatpak uninstall --unused"
 alias vim="nvim"
+alias lock="hyprlock"
 bindkey -s '^F' tmux-sessionizer^M
 
 # bun completions
@@ -31,3 +32,8 @@ export PATH=/home/yasai/.local/bin:/home/yasai/.bun/bin:/home/yasai/dotfiles/scr
 
 # Flutter
 export PATH="$HOME/.flutter/flutter/bin:$PATH"
+
+# Japanese IMF (fcitx5)
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx

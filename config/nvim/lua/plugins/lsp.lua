@@ -37,6 +37,7 @@ return {
         "clangd",
         "fish_lsp",
         "tailwindcss",
+        "astro"
       }
 
 

@@ -1,0 +1,6 @@
+/* colors.css corregido */
+
+/* Usa nombres que no sean propiedades CSS (ej: base-bg en vez de background-color) */
+@define-color bg-color    rgba(0, 0, 0, 0);  
+@define-color text-color  #ffffff;           
+@define-color border-color rgba(255, 255, 255, 0.6);
