@@ -37,3 +37,6 @@ export PATH="$HOME/.flutter/flutter/bin:$PATH"
 GTK_IM_MODULE=fcitx
 QT_IM_MODULE=fcitx
 XMODIFIERS=@im=fcitx
+
+# opencode
+export PATH=/home/yasai/.opencode/bin:$PATH
