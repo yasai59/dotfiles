@@ -1,0 +1,238 @@
+{
+  "widget": {
+    "tooltip": {
+      "checking": "Проверка linux-wallpaperengine",
+      "unavailable": "linux-wallpaperengine не установлен",
+      "running": "Движок обоев применяет настройки",
+      "ready": "Открыть панель движка обоев"
+    }
+  },
+  "menu": {
+    "refreshWallpapers": "Обновить список обоев",
+    "start": "Запустить движок обоев",
+    "stop": "Остановить движок обоев",
+    "settings": "Настройки плагина"
+  },
+  "toast": {
+    "reloaded": "Движок обоев перезагружен",
+    "stopped": "Движок обоев остановлен",
+    "reloadSkippedNoWallpaper": "Обои не настроены, поэтому перезагружать нечего",
+    "refreshingWallpapers": "Обновление списка обоев...",
+    "refreshedWallpapers": "Список обоев обновлён: {count}",
+    "refreshSkippedNoFolder": "Каталог источника обоев пуст, поэтому список обоев нельзя обновить",
+    "wallpaperColorsGenerating": "Создание скриншота обоев для извлечения цветов...",
+    "wallpaperColorsApplied": "Цвета обоев применены к Noctalia",
+    "wallpaperColorsCached": "Цвета обоев сохранены для этого дисплея",
+    "wallpaperColorsFailed": "Не удалось извлечь цвета из выбранных обоев",
+    "wallpaperColorsNoSelection": "Сначала выберите обои, а затем применяйте их цвета",
+    "wallpaperColorsEngineUnavailable": "Для генерации цветов обоев требуется доступный linux-wallpaperengine"
+  },
+  "main": {
+    "status": {
+      "unavailable": "Движок недоступен",
+      "ready": "Готово",
+      "starting": "Запуск движка",
+      "stopped": "Остановлено",
+      "crashed": "Движок неожиданно завершился"
+    },
+    "error": {
+      "notInstalled": "linux-wallpaperengine не найден в PATH. Проверьте, установлен ли он правильно.",
+      "assetsMissing": "Ресурсы Wallpaper Engine не найдены. Укажите каталог ресурсов в настройках.",
+      "noBackground": "Путь к обоям не настроен.",
+      "opengl": "Не удалось инициализировать OpenGL. Проверьте драйвер и совместимость композитора.",
+      "autoRecovered": "Автоматически восстановлена последняя рабочая раскладка"
+    }
+  },
+  "panel": {
+    "title": "Wallpaper-Engine Выбор обоев",
+    "statusChecking": "Проверка",
+    "statusUnavailable": "Недоступно",
+    "statusRunning": "Работает",
+    "statusReady": "Настроено",
+    "statusStopped": "Остановлено",
+    "sectionAudio": "Отображение и аудио",
+    "sectionFeatures": "Функции",
+    "installHint": "Пример установки: yay -S linux-wallpaperengine-git",
+    "errorBannerTitle": "Обнаружена ошибка выполнения",
+    "errorShowDetails": "Показать подробности",
+    "errorHideDetails": "Скрыть подробности",
+    "errorDismiss": "Закрыть",
+    "refreshWallpapers": "Обновить обои",
+    "start": "Запустить",
+    "stop": "Остановить",
+    "confirm": "Подтвердить",
+    "cancel": "Отмена",
+    "compatibilityQuickCheck": "Быстрая проверка совместимости",
+    "compatibilityQuickCheckRunning": "Проверка совместимости обоев...",
+    "compatibilityQuickCheckConfirm": "Просканировать все обои на совместимость дополнительных свойств? Это может занять некоторое время.",
+    "compatibilityQuickCheckFinished": "Проверено обоев: {total}, могут работать некорректно: {failed}",
+    "folderInvalid": "Каталог источника обоев недействителен или недоступен.",
+    "scanning": "Сканирование обоев...",
+    "searchPlaceholder": "Поиск обоев по названию или ID",
+    "searchClear": "Очистить поиск",
+    "filterButtonSummary": "Фильтр · {type}",
+    "sortButtonSummary": "Сортировка · {direction} {sort}",
+    "applyAllDisplays": "Применить ко всем дисплеям",
+    "closePanel": "Закрыть панель",
+    "confirmApply": "Применить обои",
+    "syncWallpaperColors": "Синхронизировать цвета",
+    "wallpaperScaling": "Масштабирование",
+    "wallpaperClamp": "Режим зажатия",
+    "wallpaperVolume": "Громкость",
+    "wallpaperMuted": "Без звука",
+    "wallpaperAudioReactive": "Аудиореактивные эффекты",
+    "wallpaperDisableMouse": "Отключить мышь",
+    "wallpaperDisableParallax": "Отключить параллакс",
+    "sectionProperties": "Дополнительные свойства",
+    "loadingProperties": "Загрузка свойств обоев...",
+    "propertiesLoadFailed": "Не удалось загрузить свойства обоев. Возможно, формат свойств этих обоев пока не поддерживается, либо сами обои не могут быть корректно загружены и запущены",
+    "propertiesFailedBadge": "Может не работать",
+    "noEditableProperties": "У этих обоев пока нет поддерживаемых редактируемых дополнительных свойств",
+    "propertiesNotice": "Здесь показаны только свойства, которые этот плагин умеет редактировать напрямую",
+    "infoType": "Тип",
+    "infoId": "ID",
+    "infoResolution": "Разрешение",
+    "infoSize": "Размер",
+    "scalingFill": "Заполнение",
+    "scalingFit": "По размеру",
+    "scalingStretch": "Растянуть",
+    "scalingDefault": "По умолчанию",
+    "clampClamp": "Зажатие",
+    "clampBorder": "Граница",
+    "clampRepeat": "Повтор",
+    "propertyLabelThemeColor": "Цвет темы",
+    "targetAllDisplays": "Цель: все дисплеи",
+    "targetSingleDisplay": "Цель: {screen}",
+    "applySingleDisplay": "Применить к {screen}",
+    "applyTarget": "Выбрать цель применения",
+    "filterAll": "Все",
+    "filterTypeAll": "Все",
+    "filterTypeScene": "Сцена",
+    "filterTypeVideo": "Видео",
+    "filterTypeWeb": "Веб",
+    "filterTypeApplication": "Приложение",
+    "filterResAll": "Разрешение: все",
+    "filterRes4k": "Разрешение: 4K",
+    "filterRes8k": "Разрешение: 8K",
+    "filterResUnknown": "Разрешение: неизвестно",
+    "filterStatic": "Статические",
+    "filterDynamic": "Динамические",
+    "sortName": "Имя",
+    "sortDateAdded": "Дата добавления",
+    "sortSize": "Размер",
+    "sortRecent": "Недавние",
+    "sortAscendingToggle": "Переключить возр./убыв.",
+    "sortAscendingToggleWithDirection": "{direction} переключить возр./убыв.",
+    "sortId": "ID",
+    "typeScene": "Сцена",
+    "typeVideo": "Видео",
+    "typeWeb": "Веб",
+    "typeApplication": "Приложение",
+    "resolutionUnknown": "Неизвестно",
+    "dynamicBadge": "Динамические",
+    "staticBadge": "Статические",
+    "prevPage": "Назад",
+    "nextPage": "Вперёд",
+    "pageSummary": "Страница {current} / {total}",
+    "pageRange": "{start}-{end} / {total}",
+    "count": "Количество обоев: {count}",
+    "emptyAll": "В исходном каталоге не найдено ни одних обоев",
+    "emptyFiltered": "Не найдено обоев, соответствующих текущим фильтрам"
+  },
+  "settings": {
+    "category": {
+      "interfaceTitle": "Интерфейс",
+      "performanceTitle": "Производительность",
+      "compatibilityTitle": "Ресурсы",
+      "audioTitle": "Аудио",
+      "displayTitle": "Отображение"
+    },
+    "defaults": {
+      "title": "Параметры применения по умолчанию",
+      "description": "Эти параметры используются по умолчанию при применении обоев, если не заданы отдельные настройки для конкретных обоев."
+    },
+    "iconColor": {
+      "label": "Цвет значка",
+      "description": "Цвет значка виджета на панели"
+    },
+    "enableExtraPropertiesEditor": {
+      "label": "Включить редактор дополнительных свойств",
+      "description": "Показывать дополнительные свойства обоев в боковой панели, если они доступны"
+    },
+    "cache": {
+      "currentSize": "Размер кэша цветовых изображений: {size}",
+      "refresh": "Обновить размер кэша",
+      "clear": "Очистить кэш цветов",
+      "sizeUnknown": "Неизвестно"
+    },
+    "units": {
+      "fps": " FPS",
+      "percent": " %",
+      "minutes": " мин"
+    },
+    "wallpapersFolder": {
+      "label": "Каталог источника обоев",
+      "description": "Каталог, содержащий папки проектов обоев",
+      "placeholder": "~/.local/share/Steam/steamapps/workshop/content/431960",
+      "scan": "Автоматически определить каталог мастерской Steam"
+    },
+    "assetsDir": {
+      "label": "Каталог ресурсов Wallpaper Engine",
+      "description": "Необязательно: путь к assets, используемый linux-wallpaperengine",
+      "placeholder": "~/.local/share/wallpaperengine/assets"
+    },
+    "wallpaperScanCacheMinutes": {
+      "label": "Время кэша сканирования обоев",
+      "description": "При открытии панели повторно использовать кэшированный список обоев, если он не старше указанного количества минут"
+    },
+    "defaultScaling": {
+      "label": "Режим масштабирования",
+      "description": "Режим масштабирования по умолчанию, если пользовательское значение не задано"
+    },
+    "defaultClamp": {
+      "label": "Режим зажатия",
+      "description": "Способ обработки границ, используемый по умолчанию при рендеринге обоев"
+    },
+    "defaultFps": {
+      "label": "Ограничение FPS",
+      "description": "Ограничение частоты кадров для обоев по умолчанию",
+      "placeholder": "30"
+    },
+    "defaultNoFullscreenPause": {
+      "label": "Не приостанавливать в полноэкранном режиме",
+      "description": "Не приостанавливать обои во время работы полноэкранных приложений"
+    },
+    "defaultFullscreenPauseOnlyActive": {
+      "label": "Приостанавливать только для активного полноэкранного окна",
+      "description": "(Только Wayland) Приостанавливать только когда активно полноэкранное окно"
+    },
+    "defaultVolume": {
+      "label": "Громкость",
+      "description": "Громкость, используемая при запуске обоев без беззвучного режима"
+    },
+    "defaultMuted": {
+      "label": "Запускать без звука",
+      "description": "Запускать обои в беззвучном режиме по умолчанию"
+    },
+    "defaultAudioReactiveEffects": {
+      "label": "Эффекты аудиореакции",
+      "description": "По умолчанию оставлять включённой обработку аудио в обоях, если она поддерживается"
+    },
+    "defaultNoAutomute": {
+      "label": "Не заглушать при звуке других приложений",
+      "description": "Если включено, звук обоев продолжит играть, даже когда другие приложения выводят аудио"
+    },
+    "defaultDisableMouse": {
+      "label": "Отключить взаимодействие мышью",
+      "description": "По умолчанию запускать обои с отключённым вводом мыши"
+    },
+    "defaultDisableParallax": {
+      "label": "Отключить эффект параллакса",
+      "description": "По умолчанию запускать обои с отключённым эффектом параллакса"
+    },
+    "autoApplyOnStartup": {
+      "label": "Автоприменение при запуске",
+      "description": "Если хотя бы для одного экрана настроены обои, автоматически запускать движок при старте"
+    }
+  }
+}
