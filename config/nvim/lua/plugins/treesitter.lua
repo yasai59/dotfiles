@@ -4,7 +4,12 @@ return {
 	dependencies = {
 		"nvim-treesitter/nvim-treesitter-context",
 	},
-	config = function()
+	opts = {
+		ensure_installed = { "lua", "typescript" },
+		auto_install = true,
+		highlight = { enable = true },
+	},
+	config = function(_, opts)
 		require("treesitter-context").setup({
 			enable = true,
 			max_lines = 2,
@@ -16,18 +21,9 @@ return {
 			separator = nil,
 			zindex = 20,
 		})
-		require("nvim-treesitter.configs").setup({
-            modules = {},
-            ignore_install = {},
-			ensure_installed = { "lua", "typescript" },
-			sync_install = false,
-			auto_install = true,
-			highlight = {
-				enable = true,
-			},
-		})
+		require("nvim-treesitter").setup(opts)
 		vim.filetype.add({
 			pattern = { [".*/hypr/.*%.conf"] = "hyprlang" },
 		})
-    end
+	end
 }

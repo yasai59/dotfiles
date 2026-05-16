@@ -28,44 +28,40 @@ return {
       },
     },
     config = function()
-      local lspconfig = require("lspconfig")
-
-      local lsp = {
+      local servers = {
         "lua_ls",
         "vtsls",
         "gopls",
         "clangd",
         "fish_lsp",
         "tailwindcss",
-        "astro"
+        "astro",
       }
 
-
-      for _, server_name in ipairs(lsp) do
-        lspconfig[server_name].setup({
-          on_attach = function(client, bufnr)
-            require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
-          end,
-        })
-      end
-
-      lspconfig.vtsls.setup({
-        root_dir = require('lspconfig.util').root_pattern("tsconfig.json", ".git"),
+      vim.lsp.config("vtsls", {
+        root_dir = function(fname)
+          return require("lspconfig.util").root_pattern("tsconfig.json", ".git")(fname)
+        end,
       })
+
+      vim.lsp.enable(servers)
 
       vim.diagnostic.config({
         signs = {
           text = {
-            [vim.diagnostic.severity.ERROR] = "",
-            [vim.diagnostic.severity.WARN] = "",
-            [vim.diagnostic.severity.HINT] = "",
-            [vim.diagnostic.severity.INFO] = "",
+            [vim.diagnostic.severity.ERROR] = "",
+            [vim.diagnostic.severity.WARN] = "",
+            [vim.diagnostic.severity.HINT] = "",
+            [vim.diagnostic.severity.INFO] = "",
           },
         },
       })
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("nvim-lsp-attach", { clear = true }),
         callback = function(event)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          require("workspace-diagnostics").populate_workspace_diagnostics(client, event.buf)
+
           local map = function(keys, func, desc)
             vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
           end
