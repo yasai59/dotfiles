@@ -1,77 +1,81 @@
 return {
-    "williamboman/mason.nvim",
+  {
+    "neovim/nvim-lspconfig",
     dependencies = {
-        "williamboman/mason-lspconfig.nvim",
-        "neovim/nvim-lspconfig",
-        "VidocqH/lsp-lens.nvim",
-				"hrsh7th/cmp-nvim-lsp",
+      "artemave/workspace-diagnostics.nvim",
+      {
+        "folke/lazydev.nvim",
+        opts = {
+          library = {
+            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+          },
+        },
+      },
+      {
+        "dmmulroy/tsc.nvim",
+        config = function()
+          local tsc = require("tsc")
+          tsc.setup({
+            run_as_monorepo = true,
+            use_diagnostics = true,
+            auto_open_qflist = false,
+            flags = {
+              noEmit = true,
+              watch = false,
+            },
+          })
+        end,
+      },
     },
     config = function()
-        local lspconfig = require("lspconfig")
-        local capabilities = require('cmp_nvim_lsp').default_capabilities();
-        capabilities.textDocument.foldingRange = {
-            dynamicRegistration = false,
-            lineFoldingOnly = true
-        }
-        require("mason").setup()
-        require("mason-lspconfig").setup({
-            ensure_installed = {
-                "lua_ls",
-            },
-            automatic_installation = true,
-            handlers = {
-                function(server_name)
-                    lspconfig[server_name].setup({
-                        capabilities = capabilities
-                    })
-                end,
-                ["lua_ls"] = function()
-                    lspconfig.lua_ls.setup({
-                        capabilities = capabilities,
-                        settings = { Lua = { diagnostics = { globals = { "vim" } } } },
-                    })
-                end
-            }
-        })
+      local servers = {
+        "lua_ls",
+        "vtsls",
+        "gopls",
+        "clangd",
+        "fish_lsp",
+        "tailwindcss",
+        "astro",
+      }
 
-        local SymbolKind = vim.lsp.protocol.SymbolKind
+      vim.lsp.config("vtsls", {
+        root_dir = function(fname)
+          return require("lspconfig.util").root_pattern("tsconfig.json", ".git")(fname)
+        end,
+      })
 
-        require('lsp-lens').setup({
-            enable = true,
-            include_declaration = false, -- Reference include declaration
-            sections = {                 -- Enable / Disable specific request, formatter example looks 'Format Requests'
-                definition = false,
-                references = false,
-                implements = true,
-                git_authors = false,
-            },
-            ignore_filetype = {
-                "prisma",
-            },
-            -- Target Symbol Kinds to show lens information
-            target_symbol_kinds = { SymbolKind.Function, SymbolKind.Method, SymbolKind.Interface },
-            -- Symbol Kinds that may have target symbol kinds as children
-            wrapper_symbol_kinds = { SymbolKind.Class, SymbolKind.Struct },
-        })
+      vim.lsp.enable(servers)
 
-        vim.api.nvim_create_autocmd('LspAttach', {
-            group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
-            callback = function(event)
-                local builtin = require('telescope.builtin')
-                local map = function(keys, func, desc)
-                    vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
-                end
-                map('gd', builtin.lsp_definitions, '[G]oto [D]efinition')
-                map('gr', builtin.lsp_references, '[G]oto [R]eferences')
-                map('gi', builtin.lsp_implementations, '[G]oto [I]mplementation')
-                map('gt', builtin.lsp_type_definitions, '[G]oto [T]ype Definition')
-                --map('<leader>ds', builtin.lsp_document_symbols, '[D]ocument [S]ymbols')
-                --map('<leader>ws', builtin.lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
-                map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-                map('<A-return>', vim.lsp.buf.code_action, '[C]ode [A]ction')
-                map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
-                map('K', vim.lsp.buf.hover, 'Hover Documentation')
-            end
-        })
-    end
+      vim.diagnostic.config({
+        signs = {
+          text = {
+            [vim.diagnostic.severity.ERROR] = "",
+            [vim.diagnostic.severity.WARN] = "",
+            [vim.diagnostic.severity.HINT] = "",
+            [vim.diagnostic.severity.INFO] = "",
+          },
+        },
+      })
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("nvim-lsp-attach", { clear = true }),
+        callback = function(event)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          require("workspace-diagnostics").populate_workspace_diagnostics(client, event.buf)
+
+          local map = function(keys, func, desc)
+            vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+          end
+          -- map("gd", vim.lsp.buf.definition, "[g]oto [d]efinition")
+          -- map("gr", vim.lsp.buf.references, "[g]oto [r]eferences")
+          -- map( "gi", vim.lsp.buf.implementation, "[g]oto [i]mplementation")
+          -- map( "gt", vim.lsp.buf.type_definition, "[g]oto [t]ype Definition")
+          map("gD", vim.lsp.buf.declaration, "[g]oto [D]eclaration")
+          map("<leader>rn", vim.lsp.buf.rename, "[r]e[n]ame")
+          map("<leader>ca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
+          map("K", vim.lsp.buf.hover, "Hover Documentation")
+          map("<leader>tc", require("tsc").run, "[t]ype [c]heck")
+        end,
+      })
+    end,
+  },
 }

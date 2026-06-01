@@ -4,7 +4,7 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = function()
       local builtin = require("telescope.builtin")
-      local telescope = require("telescope")
+      -- local telescope = require("telescope")
       return {
         { "gd",               builtin.lsp_definitions,               desc = "[g]oto [d]efinitions" },
         { "gr",               builtin.lsp_references,                desc = "[g]oto [r]eferences" },
@@ -13,17 +13,14 @@ return {
         { "<leader>pf",       builtin.find_files,                    desc = "[p]roject [f]iles" },
         { "<leader>pg",       builtin.live_grep,                     desc = "[p]roject live [g]rep" },
         { "<leader>ps",       builtin.grep_string,                   desc = "[p]roject grep [s]tring" },
-        -- { "<leader>pe", builtin.diagnostics, desc = "[p]roject [e]rrors" },
         { "<leader>vk",       builtin.keymaps,                       desc = "[v]iew [k]eymaps" },
         { "<leader>vr",       builtin.oldfiles,                      desc = "[v]iew [r]ecent" },
         { "<leader>/",        builtin.current_buffer_fuzzy_find,     desc = "[/] Search in current buffer" },
         { "<leader><leader>", builtin.buffers,                       desc = "[ ] Find existing buffers" },
-        { "<leader>fc",       telescope.extensions.flutter.commands, desc = "[f]lutter [c]ommands" }
       }
     end,
     config = function()
       local telescope = require("telescope")
-      telescope.load_extension("flutter")
       local actions = require("telescope.actions")
       telescope.setup({
         defaults = {
