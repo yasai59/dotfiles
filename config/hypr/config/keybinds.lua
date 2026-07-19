@@ -3,25 +3,23 @@ local mainMod = "SUPER" -- Define la tecla "Windows" como modificador principal
 local terminal = "kitty"
 local fileManager = "thunar"
 local ipc = "qs -c noctalia-shell ipc call"
+local browser = "zen-browser"
 
--- Capturas de pantalla
-local ss_region = "grimblast --freeze copy area"
+
 -- hl.bind("ALT + SHIFT + S", hl.dsp.exec_cmd(ss_region))
 hl.bind("ALT + SHIFT + S", hl.dsp.exec_cmd(ipc .. " plugin:screen-shot-and-record screenshot"))
 
--- Atajos de ejemplo comunes
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + W", hl.dsp.window.close()) -- killactive ahora es close()
+hl.bind(mainMod .. " + W", hl.dsp.window.close())
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exit())
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" })) -- Sintaxis correcta de float
+hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(ipc .. " launcher toggle"))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo({ action = "toggle" })) -- pseudo pertenece a window.
+hl.bind(mainMod .. " + P", hl.dsp.window.pseudo({ action = "toggle" }))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd(ipc .. " launcher clipboard"))
 hl.bind(mainMod .. " + comma", hl.dsp.exec_cmd(ipc .. " settings toggle"))
 hl.bind("ALT + SHIFT + L", hl.dsp.exec_cmd(ipc .. " lockScreen lock"))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(ipc .. " sessionMenu show"))
--- hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- Mensaje de layout si usas dwindle
 
 -- Mover el foco con las teclas HJKL (Estilo Vim)
 hl.bind(mainMod .. " + h", hl.dsp.focus({ direction = "l" }))
@@ -39,10 +37,6 @@ for i = 1, 9 do
     hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = tostring(i) }))
 end
 hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.window.move({ workspace = "10" }))
-
--- Ejemplo de área de trabajo especial (Scratchpad - Comentado)
--- hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
--- hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Control de volumen usando las teclas multimedia
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"))
@@ -67,5 +61,5 @@ hl.bind(mainMod .. " + Tab", hl.dsp.window.fullscreen({ mode = "maximized", acti
 hl.bind(mainMod .. " + M", hl.dsp.window.fullscreen({ action = "toggle" }))
 
 -- Aplicaciones personalizadas
-hl.bind("ALT + SHIFT + F", hl.dsp.exec_cmd("helium-browser"))
+hl.bind("ALT + SHIFT + F", hl.dsp.exec_cmd(browser))
 hl.bind("ALT + SHIFT + V", hl.dsp.exec_cmd("code"))

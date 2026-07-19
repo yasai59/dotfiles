@@ -9,6 +9,9 @@ hl.config({
       natural_scroll = false
     }
   },
+  misc = {
+    middle_click_paste = false,
+  },
 })
 
 hl.device({

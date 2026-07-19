@@ -300,11 +300,6 @@
                         "displayMode": "onhover"
                     },
                     "id": "plugin:network-manager-vpn"
-                },
-                {
-                    "defaultSettings": {
-                    },
-                    "id": "plugin:protonvpn-manager"
                 }
             ]
         }
@@ -418,7 +413,7 @@
         "deadOpacity": 0.6,
         "displayMode": "auto_hide",
         "dockType": "attached",
-        "enabled": true,
+        "enabled": false,
         "floatingRatio": 1,
         "groupApps": false,
         "groupClickAction": "cycle",

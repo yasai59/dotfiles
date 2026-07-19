@@ -31,10 +31,6 @@
             "enabled": true,
             "sourceUrl": "https://github.com/noctalia-dev/noctalia-plugins"
         },
-        "protonvpn-manager": {
-            "enabled": true,
-            "sourceUrl": "https://google.com"
-        },
         "screen-shot-and-record": {
             "enabled": true,
             "sourceUrl": "https://github.com/noctalia-dev/noctalia-plugins"

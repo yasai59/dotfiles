@@ -47,9 +47,11 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 -- show errors and warnings
 vim.diagnostic.config({
-  virtual_text = false,
+  virtual_text = true,
   virtual_lines = false,
   signs = true,
   underline = true,
   severity_sort = true,
 })
+-- session options
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
