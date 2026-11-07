@@ -1,350 +1,276 @@
-# dotfiles
+# Dotfiles — NixOS + Hyprland + Noctalia
 
-Configuracion personal de mi entorno de desarrollo en Arch Linux. Incluye configuraciones para multiples window managers (Wayland y X11), Neovim, Kitty, Waybar/Polybar, y mas.
+Dotfiles personales para un entorno Linux con **Hyprland** como compositor, **Kitty** como terminal, **Noctalia** como shell de escritorio, y **Fastfetch**, **Neovim** y **Zsh** como herramientas principales.
 
-> **Nota**: Este repositorio esta pensado para mi setup personal con triple monitor y drivers NVIDIA. Adapta las configuraciones a tu hardware antes de usarlas.
+> El script `install.sh` de la raíz automatiza todo el proceso en NixOS: copia `configuration.nix` y `flake.nix` a `/etc/nixos` (conservando tu `hardware-configuration.nix` y con backup de lo anterior), activa los flakes si es el primer build, ejecuta `nixos-rebuild switch --flake` y crea los symlinks de las dotfiles. Pide confirmación antes de tocar el sistema. Los pasos manuales equivalentes se detallan a continuación.
 
 ---
 
 ## Estructura del repositorio
 
-```
-dotfiles/
-├── config/
-│   ├── bspwm/           # Window manager (X11)
-│   ├── dunst/            # Daemon de notificaciones
-│   ├── fastfetch/        # System info en la terminal
-│   ├── fontconfig/       # Configuracion de fuentes
-│   ├── hypr/             # Hyprland compositor (Wayland) + hyprlock
-│   ├── i3/               # Window manager (X11)
-│   ├── kitty/            # Emulador de terminal
-│   ├── nvim/             # Editor (Neovim + lazy.nvim)
-│   ├── picom/            # Compositor (X11)
-│   ├── polybar/          # Barra de estado (X11)
-│   ├── river/            # Window manager (Wayland)
-│   ├── rofi/             # Launcher de aplicaciones
-│   ├── sxhkd/            # Daemon de atajos de teclado
-│   ├── waybar/           # Barra de estado (Wayland)
-│   └── zsh/              # Shell
-├── fonts/
-│   └── firaMono/         # FiraMono Nerd Font (bundled)
-├── icons/                # Iconos personalizados
-├── scripts/
-│   └── tmux-sessionizer  # Gestor de sesiones tmux con fzf
-└── themes/
-    └── AtomOneDarkTheme-main/  # Tema GTK Atom One Dark
+```text
+.dotfiles/
+├── install.sh              # Instalador para NixOS (configs del sistema + symlinks)
+├── scripts/                # Scripts de sistema
+│   ├── update.sh           #   Copia configuration.nix y hace nixos-rebuild switch
+│   ├── updatef.sh          #   Copia configuration.nix + flake.nix y rebuild con flake
+│   └── vpn.sh              #   Conexión VPN (openfortivpn, personal)
+├── fonts/firaMono/         # FiraMono Nerd Font en OTF (respaldo; en NixOS se instala por nix)
+├── icons/                  # Temas de iconos (BreezeX-Dark, Uos...)
+├── themes/                 # Tema GTK Atom One Dark
+└── config/
+    ├── hypr/               # Configuración de Hyprland (en Lua)
+    ├── kitty/              # Configuración de Kitty
+    ├── fastfetch/          # Configuración de Fastfetch
+    ├── nvim/               # Configuración de Neovim (lazy.nvim)
+    ├── zsh/                # .zshrc legacy de Arch (en NixOS zsh es declarativo)
+    ├── noctalia/           # Configuración de Noctalia shell (ajustes, colores, plugins)
+    ├── nixos/              # configuration.nix y flake.nix del sistema
+    ├── fontconfig/         # Config de fuentes (opcional)
+    ├── rofi/               # Config de rofi (opcional)
+    └── waybar/             # Config de waybar (no se usa con Noctalia)
 ```
 
 ---
 
-## Window Managers
+## Requisitos
 
-Se incluyen configuraciones para **4 window managers**. El principal es **Hyprland** (Wayland).
-
-### Hyprland (Wayland) - Principal
-
-| Aspecto | Configuracion |
-|---------|--------------|
-| Monitor principal | DP-2 (2560x1440@165Hz) |
-| Monitores secundarios | DP-1 (1080p@144Hz), HDMI-A-1 (1080p@60Hz, rotado) |
-| Workspaces | 9 persistentes distribuidos en 3 monitores |
-| Teclado | `us,es` con toggle `Win+Space` |
-| Gaps | 2px inner, 10px outer |
-| Bordes | 2px, rounding 4px |
-| Opacidad | Activa 1.0, inactiva 0.95 |
-| Blur | Activado (size 4, 2 pasadas) |
-| Autostart | udiskie, fcitx5, Quickshell (noctalia-shell), hyprlock |
-
-**Atajos principales**:
-
-| Atajo | Accion |
-|-------|--------|
-| `Super+Return` | Abrir Kitty |
-| `Super+W` | Cerrar ventana |
-| `Super+E` | Thunar (gestor de archivos) |
-| `Super+D` | Launcher (Quickshell) |
-| `Super+C` | Portapapeles (Quickshell) |
-| `Super+T` | Toggle flotante |
-| `Super+H/J/K/L` | Mover foco |
-| `Super+Shift+H/J/K/L` | Mover ventana |
-| `Super+1-9` | Cambiar workspace |
-| `Super+Shift+1-0` | Mover ventana a workspace |
-| `Super+Tab` | Maximizar |
-| `Super+M` | Fullscreen |
-| `Alt+Shift+F` | Brave |
-| `Alt+Shift+V` | VS Code |
-| `Alt+Shift+S` | Screenshot |
-| `Ctrl+Shift+L` | Bloquear pantalla |
-
-### bspwm (X11)
-
-Triple monitor con 9 workspaces, gaps de 12px, border 3px. Usa sxhkd para los atajos de teclado y polybar como barra de estado.
-
-### i3 (X11)
-
-Config con gaps (inner 6), esquema de colores Nord, nombres de workspace en japones y polybar.
-
-### river (Wayland)
-
-Configuracion basica con rivertile layout, colores solarized dark y controles multimedia.
+- **NixOS** (el flake usa `nixos-unstable`).
+- **Hyprland >= 0.56**: es la versión que lee la configuración en **Lua** (`~/.config/hypr/hyprland.lua`) de forma nativa. La versión de unstable cumple esto.
+- GPU **NVIDIA** (la configuración actual incluye drivers y variables específicas de NVIDIA; ver [Personalización de hardware](#personalización-de-hardware) si tu hardware es distinto).
 
 ---
 
-## Terminal: Kitty
+## Instalación en un NixOS nuevo
 
-| Configuracion | Valor |
-|--------------|-------|
-| Fuente | FiraMono Nerd Font, size 13 |
-| Opacidad | 0.8 (translucida) |
-| Color de fondo | #080808 |
-| Margenes | 1px |
-| Navegacion | `Ctrl+H/J/K/L` entre ventanas |
+> **Atajo:** `./install.sh` automatiza los pasos 2 a 7 (con confirmaciones, backups de las configs previas e instalación de los plugins de Neovim). El detalle manual:
 
----
+### 1. Instalar NixOS base
 
-## Neovim
+Instala NixOS desde la ISO oficial como de costumbre. Al terminar, `/etc/nixos/` contendrá un `configuration.nix` y un `hardware-configuration.nix` generados por el instalador.
 
-Configuracion basada en **lazy.nvim** con leader key `Space`. Incluye 26 plugins organizados en archivos separados.
+> **Importante:** conserva el `hardware-configuration.nix` de tu máquina. Este archivo es específico del hardware y **no** está en este repositorio.
 
-### Plugins
+### 2. Copiar la configuración del sistema
 
-| Plugin | Proposito | Atajo principal |
-|--------|-----------|-----------------|
-| **nvim-lspconfig** | Cliente LSP | `K` hover, `gd` definicion, `<leader>rn` renombrar |
-| **telescope.nvim** | Fuzzy finder | `<leader>pf` archivos, `<leader>pg` grep, `<leader>ps` string |
-| **oil.nvim** | Explorador de archivos | `<leader>pv` abrir |
-| **treesitter** | Syntax highlighting | Auto-install para lua, typescript |
-| **treesitter-context** | Contexto sticky | Automatico |
-| **blink.cmp** | Autocompletado | `Tab` aceptar, `C-j/k` navegar |
-| **conform.nvim** | Formateo al guardar | Automatico al guardar |
-| **lualine.nvim** | Barra de estado | Automatico |
-| **harpoon** | Marcadores de archivos | `<leader>m` marcar, `Alt+F/D/S/G` navegar |
-| **trouble.nvim** | Lista de diagnositcos | `<leader>pe` proyecto, `<leader>fe` buffer |
-| **gitsigns.nvim** | Signos de git en gutter | Blame en linea actual |
-| **auto-session** | Gestor de sesiones | Automatico |
-| **render-markdown.nvim** | Renderizado markdown | Automatico |
-| **nvim-colorizer.lua** | Preview de colores hex/rgb | Automatico |
-| **indent-blankline.nvim** | Guias de indentacion | `▏` como caracter |
-| **cloak.nvim** | Ocultar valores .env | Automatico en `.env*` |
-| **nvim-notify** | Notificaciones mejoradas | Automatico |
-| **fidget.nvim** | Progreso LSP | Automatico |
-| **tokyonight.nvim** | Tema (Tokyo Night Storm) | Transparente |
-| **flutter-tools.nvim** | Desarrollo Flutter | `<leader>fc` comandos |
-| **tsc.nvim** | Type checking TypeScript | Monorepo mode |
-| **lazydev.nvim** | Desarrollo Lua | Automatico |
-| **workspace-diagnostics** | Diagnostico workspace | Automatico |
+Clona o copia este repositorio en `~/.dotfiles` (puedes hacerlo desde la ISO con `git`, o tras el primer rebuild), y copia la configuración de NixOS a `/etc/nixos`:
 
-### Formatters (conform.nvim)
-
-| Lenguaje | Formatter |
-|----------|-----------|
-| Lua | stylua |
-| TypeScript/JS/JSX | prettierd |
-| CSS/HTML/JSON | prettierd |
-| Bash/Shell | shfmt |
-| Go | gofmt |
-| Python | pyink |
-| Rust | rustfmt |
-| C/C++ | clang-format |
-| C# | csharpier |
-| Java | astyle |
-| PHP | pint |
-| TOML | taplo |
-| YAML | yamlfmt |
-| LaTeX | latexindent |
-| XML | xmlformatter |
-
-### LSP Servers configurados
-
-`lua_ls`, `vtsls`, `gopls`, `clangd`, `fish_lsp`, `tailwindcss`, `astro`
-
----
-
-## Barra de estado
-
-### Waybar (Hyprland)
-
-Barra transparente con FiraMono Nerd Font. Modulos:
-
-- **Izquierda**: Launcher (rofi), CPU, RAM, media (Spotify/playerctl), tray, ventana activa
-- **Centro**: Workspaces (iconos numericos japoneses)
-- **Derecha**: Idioma ("GUIRI IDIOM" / "VIVA ESPANA"), updates disponibles, volumen, reloj, wallpaper
-
-### Polybar (bspwm/i3)
-
-Dos barras: `primary` (monitor principal con systray) y `general` (monitores secundarios). Colores Tokyo Night. Layout de teclado como "GUIRI" / "ESPANITA".
-
----
-
-## App Launcher: Rofi
-
-Tema minimalista negro con texto blanco, ventana de 450px, bordes redondeados (8px), fuente Figtree 13. Funciona en X11 y Wayland (modo `-normal-window`).
-
----
-
-## Shell: Zsh
-
-- **Framework**: Oh My Zsh
-- **Tema**: kafeitu
-- **Plugins**: git, zsh-autosuggestions, sudo, zsh-syntax-highlighting
-- **Aliases**:
-  - `ls` → `lsd`
-  - `cat` → `bat`
-  - `vim` → `nvim`
-  - `lock` → `hyprlock`
-  - `work` → `cd ~/Documents/work`
-  - `update` → `yay -Syu` + flatpak update
-  - `purge` → limpiar paquetes huerfanos
-- **fastfetch** al abrir terminal
-
----
-
-## Notificaciones: Dunst
-
-Posicionado abajo-derecha. Esquinas redondeadas (10px), transparencia 10%. Iconos personalizados (pokeball para normales). Criticas persistentes hasta cierre manual.
-
----
-
-## Compositor X11: Picom
-
-Animaciones de apertura/cierre (scale+fade, 0.7s), fading suave, backend GLX. Sin sombras. Script de toggle con notificacion dunstify.
-
-> Requiere el fork con soporte de animaciones (`picom-animations` o `picom-git`).
-
----
-
-## Screen Lock: Hyprlock
-
-Pantalla de bloqueo con wallpaper blurizado, reloj grande (JetBrains Mono Extrabold, 95px), fecha y campo de password redondeado (32px).
-
----
-
-## Fastfetch
-
-Muestra informacion del sistema al abrir la terminal con ASCII art personalizado. Muestra: OS, kernel, paquetes, CPU, GPU, displays, RAM, shell, tema, terminal y mas.
-
----
-
-## Tema GTK: Atom One Dark
-
-Tema completo GTK incluido en `themes/`. Compatible con GTK 2.0, 3.0, 3.20, Metacity, Openbox, Xfwm4 y Unity.
-
----
-
-## Dependencias
-
-### Fuentes
-
-```sh
-paru -S ttf-freefont ttf-ms-fonts ttf-linux-libertine ttf-dejavu \
-       ttf-inconsolata ttf-ubuntu-font-family noto-fonts-cjk \
-       noto-fonts-emoji noto-fonts
+```bash
+sudo cp ~/.dotfiles/config/nixos/configuration.nix /etc/nixos/configuration.nix
+sudo cp ~/.dotfiles/config/nixos/flake.nix         /etc/nixos/flake.nix
+# NO sobrescribas /etc/nixos/hardware-configuration.nix
 ```
 
-Fuentes adicionales necesarias (no en repos):
+### 3. Personalizar antes del primer rebuild
 
-- **FiraMono Nerd Font** (incluida en `fonts/firaMono/`)
-- **JetBrains Mono** (para hyprlock)
-- **Figtree** (para rofi)
+Revisa `configuration.nix` y ajusta lo que sea específico de tu máquina:
 
-### Core (Wayland - Hyprland)
+| Qué | Dónde | Nota |
+|---|---|---|
+| Usuario | `users.users."yasai"` | El config asume usuario `yasai` y rutas `/home/yasai` en varios sitios (aliases, scripts) |
+| Hostname | `networking.hostName` | Debe ser `nixos` (o cambia el atributo `nixosConfigurations.nixos` del flake) |
+| Zona horaria / locale | `time.timeZone`, `i18n.*` | Actualmente `Europe/Madrid` + español |
+| Discos NTFS extra | `fileSystems."/media/..."` | Montajes personales por UUID; elimínalos si no aplican |
+| GPU | `hardware.nvidia`, `services.xserver.videoDrivers`, `boot.kernelParams` | Sección solo válida para NVIDIA |
+| Paquetes personales | `environment.systemPackages` | Quita lo que no uses (equibop, feishin, lmstudio, vpn...) |
+| `hypr-kdeconnect-fix` | input del flake + derivación | Parche opcional para KDE Connect sobre Hyprland; puedes quitar el input y la derivación si no lo necesitas |
 
-```sh
-paru -S hyprland hyprlock waybar rofi-wayland dunst kitty \
-       quickshell grimblast wpctl udiskie playerctl \
-       fcitx5 pamixer dex brightnessctl
+### 4. Primer rebuild (activando flakes)
+
+El flake necesita `nix-command` y `flakes` activados. La configuración ya los declara (`nix.settings.experimental-features`), pero para el *primer* build hay que habilitarlos a mano:
+
+```bash
+sudo mkdir -p /etc/nix
+echo "experimental-features = nix-command flakes" | sudo tee -a /etc/nix/nix.conf
+sudo nixos-rebuild switch --flake /etc/nixos#nixos
 ```
 
-### Core (X11 - bspwm/i3)
+Esto instala todo el sistema: Hyprland, Kitty, Fastfetch, Neovim, Zsh (con Oh My Zsh), Noctalia (desde su flake), fuentes Nerd Fonts, PipeWire, portales XDG, drivers NVIDIA, etc.
 
-```sh
-paru -S bspwm sxhkd i3-wm polybar picom nitrogen lxappearance \
-       xrandr flameshot nm-applet xkblayout-state
+### 5. Crear los symlinks de las dotfiles
+
+Enlaza las carpetas de configuración de este repo en `~/.config`:
+
+```bash
+cd ~/.dotfiles/config
+
+for dir in hypr kitty fastfetch nvim noctalia; do
+  rm -rf ~/.config/$dir        # elimina la config por defecto si existiera
+  ln -s ~/.dotfiles/config/$dir ~/.config/$dir
+done
+
+# Los aliases `update`, `updatef` y `vpn` apuntan a ~/scripts:
+ln -sfn ~/.dotfiles/scripts ~/scripts
 ```
 
-### Neovim y herramientas de desarrollo
+Notas:
 
-```sh
-paru -S neovim ripgrep fd fzf tmux lazygit \
-       stylua prettierd shfmt clang-format go python-pyink \
-       rustfmt astyle csharpier taplo yamlfmt latexindent xmlformatter \
-       nodejs typescript gopls clang lua-language-server \
-       tailwindcss-language-server astro-language-server
+- **Zsh no se enlaza**: en NixOS está configurado de forma declarativa en `configuration.nix` (ver [Zsh](#zsh)). El `config/zsh/.zshrc` del repo es el legacy de Arch y no debe enlazarse.
+- Si tu usuario no es `yasai`, actualiza las rutas absolutas (`/home/yasai/...`) de `configuration.nix`, `scripts/` y `autostart.lua`.
+
+### 6. Reiniciar e iniciar sesión
+
+```bash
+sudo reboot
 ```
 
-### Shell y utilidades
+Tras reiniciar, inicia sesión en la **TTY1** con tu usuario: `programs.zsh` está configurado para que, al abrir una shell en `/dev/tty1`, ejecute automáticamente `start-hyprland` (binario incluido con el propio paquete de Hyprland) y entre al escritorio. En cualquier otra TTY/shell se lanza `fastfetch` en su lugar.
 
-```sh
-paru -S zsh lsd bat fastfetch yay paru flatpak thunar brave
-```
+### 7. Primera ejecución de Neovim
 
-### Oh My Zsh + plugins
+Al abrir `nvim` por primera vez, **lazy.nvim** se descarga solo e instala todos los plugins. También puedes forzarlo desde la terminal:
 
-```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-```
-
-### Drivers NVIDIA (si aplica)
-
-```sh
-paru -S nvidia-dkms nvidia-utils lib32-nvidia-utils \
-       nvidia-settings egl-wayland
+```bash
+nvim --headless "+Lazy! sync" +qa
 ```
 
 ---
 
-## Instalacion
+## Contenido por herramienta
 
-1. Clonar el repositorio:
+### Hyprland (`config/hypr/`)
 
-```sh
-git clone https://github.com/<tu-usuario>/dotfiles.git ~/dotfiles
+La configuración está escrita en **Lua** y Hyprland la carga nativamente desde `hyprland.lua`:
+
+```text
+config/hypr/
+├── hyprland.lua          # Entry point: require("config/init")
+├── hyprtoolkit.conf      # Colores para el toolkit de Hyprland
+└── config/
+    ├── init.lua          # Carga el resto de módulos
+    ├── theme.lua         # Gaps, bordes, blur, animaciones
+    ├── autostart.lua     # Programas al iniciar (noctalia-shell, fcitx5, etc.)
+    ├── environment.lua   # Variables de entorno de la sesión
+    ├── monitors.lua      # Monitores y workspaces persistentes
+    ├── nvidia.lua        # Variables y ajustes NVIDIA
+    ├── devices.lua       # Teclado, ratón, sensibilidad
+    ├── windowrules.lua   # Reglas de ventanas (equibop, steam)
+    └── keybinds.lua      # Atajos de teclado
+└── noctalia/
+    ├── noctalia-colors.lua   # Colores de Hyprland generados por Noctalia
+    └── noctalia-colors.conf
 ```
 
-2. Crear symlinks a `~/.config/`:
+Atajos principales (definidos en `keybinds.lua`):
 
-```sh
-# Ejemplo para Hyprland
-ln -s ~/dotfiles/config/hypr ~/.config/hypr
-ln -s ~/dotfiles/config/kitty ~/.config/kitty
-ln -s ~/dotfiles/config/nvim ~/.config/nvim
-ln -s ~/dotfiles/config/waybar ~/.config/waybar
-ln -s ~/dotfiles/config/rofi ~/.config/rofi
-ln -s ~/dotfiles/config/dunst ~/.config/dunst
-ln -s ~/dotfiles/config/zsh/.zshrc ~/.zshrc
-ln -s ~/dotfiles/config/fastfetch ~/.config/fastfetch
-ln -s ~/dotfiles/config/fontconfig ~/.config/fontconfig
+| Atajo | Acción |
+|---|---|
+| `SUPER + Return` | Abrir Kitty |
+| `SUPER + W` | Cerrar ventana |
+| `SUPER + SHIFT + Q` | Salir de Hyprland |
+| `SUPER + E` | Thunar |
+| `SUPER + D` | Launcher de Noctalia |
+| `SUPER + C` | Historial de portapapeles |
+| `SUPER + ,` | Ajustes de Noctalia |
+| `SUPER + P` | Pseudo-tiling |
+| `SUPER + T` | Ventana flotante |
+| `ALT + SHIFT + L` | Bloquear pantalla (Noctalia) |
+| `SUPER + SHIFT + P` | Menú de sesión |
+| `ALT + SHIFT + S` | Captura de pantalla (plugin de Noctalia) |
+| `ALT + SHIFT + F` | Zen Browser |
+| `ALT + SHIFT + V` | VS Code |
+| `SUPER + H/J/K/L` | Mover el foco (estilo Vim) |
+| `SUPER + SHIFT + H/J/K/L` | Mover la ventana |
+| `SUPER + 1..9` | Ir al workspace N |
+| `SUPER + SHIFT + 1..9 / 0` | Mover ventana al workspace N / 10 |
+| `SUPER + Tab` / `SUPER + M` | Fullscreen maximizado / completo |
+| `SUPER + rueda` | Cambiar de workspace |
+| `SUPER + arrastrar` | Mover / redimensionar con el ratón |
+| `XF86AudioRaise/LowerVolume` | Volumen (`wpctl`) |
+
+Cambio de idioma del teclado: **Win + Espacio** (distribución `us,es`).
+
+#### Personalización de hardware
+
+- **`monitors.lua`**: configurado para 3 monitores (`DP-2` 2560x1440@165 principal, `DP-1` 1920x1080@144 a la derecha, `HDMI-A-1` 2560x1440@144). Ajusta salidas, resoluciones y posiciones con los nombres que reporte `hyprctl monitors`.
+- **`devices.lua`**: contiene una regla específica para un ratón Razer Deathadder; elimínala o ajusta tu `sensitivity`.
+- **`nvidia.lua`**: variables NVIDIA + `no_hardware_cursors`. Si tu GPU **no** es NVIDIA, borra este módulo (y su `require` en `init.lua`) junto con la sección `hardware.nvidia` de `configuration.nix`.
+- **`autostart.lua`**: revisa la lista; algunos comandos (`fcitx5`, `udiskie`, `clipboard-sync`, `qpwgraph`, `equibop`, `kdeconnect-indicator`) no están todos en `configuration.nix`. Instálalos o comenta las líneas que no necesites.
+
+### Kitty (`config/kitty/`)
+
+- Fuente: **FiraMono Nerd Font** tamaño 10 (la fuente la instala `configuration.nix` con `nerd-fonts.fira-mono`).
+- Opacidad de fondo `0.8`, margen de 1px, sin campana de audio.
+- Navegación entre ventanas/paneles con `Ctrl + H/J/K/L` (estilo Vim).
+- Incluye `current-theme.conf`, un tema **generado automáticamente por Noctalia**: la shell escribe ahí su paleta al cambiar de colorscheme, de modo que Kitty sigue el tema del escritorio. No borres ese `include`.
+
+### Fastfetch (`config/fastfetch/`)
+
+- `config.jsonc`: layout personalizado con secciones (System, Hardware, Visual, Misc) y color verde/cian.
+- `ascii.txt`: logo ASCII personalizado que se muestra en lugar del logo de la distro. `logo1.png` es un logo alternativo (en formato imagen).
+- Se ejecuta **automáticamente al abrir cualquier terminal**, configurado en `programs.zsh.interactiveShellInit` de `configuration.nix`.
+
+### Neovim (`config/nvim/`)
+
+Configuración modular gestionada con **lazy.nvim**:
+
+```text
+config/nvim/
+├── init.lua               # Entry point
+├── lazy-lock.json         # Versiones fijadas de plugins
+├── lua/config/
+│   ├── core/              # options.lua (opciones del editor) y keymaps.lua (atajos)
+│   ├── lazy.lua           # Bootstrap de lazy.nvim
+│   └── plugins/           # Un archivo por plugin
+│       ├── lsp/           # mason + nvim-lspconfig
+│       └── blink, barbar, telescope, oil, harpoon,
+│         nvim-treesitter, auto-pairs, colorscheme,
+│         sessions, java, lazydev, codeactions ...
+└── bak/                   # Configuración anterior (respaldo, no se carga)
 ```
 
-3. Instalar la fuente FiraMono Nerd Font:
+- **Leader**: espacio.
+- Plugins destacados: `blink.cmp` (autocompletado), `barbar` (bufferline con `Alt + ,/.` para navegar), `telescope` (fuzzy finder), `oil.nvim` (explorador de archivos como buffer), `harpoon` (marcadores de archivos), `nvim-treesitter`, LSP con `mason` + `nvim-lspconfig`.
+- Atajos útiles: `<leader>f` formatea con LSP, `<leader>e` muestra diagnósticos, `<leader>d` borra sin copiar, `J`/`K` en visual mueven líneas, `<leader>sv/sh/sx` gestionan splits, `<leader>to/tx/tn/tp` gestionan tabs.
+- Los plugins se instalan solos en la primera ejecución (o con `nvim --headless "+Lazy! sync" +qa`).
 
-```sh
-cp -r ~/dotfiles/fonts/firaMono ~/.local/share/fonts/
-fc-cache -fv
-```
+### Zsh (declarativo en `configuration.nix`)
 
-4. Instalar el tema GTK Atom One Dark:
+En NixOS la shell no se configura con `.zshrc` sino con el módulo `programs.zsh` de `configuration.nix`, que ya incluye:
 
-```sh
-cp -r ~/dotfiles/themes/AtomOneDarkTheme-main ~/.themes/
-```
+- **Oh My Zsh** con tema `kafeitu` y plugins `git` y `sudo`.
+- **zsh-autosuggestions** y **zsh-syntax-highlighting** (activados por el módulo).
+- **Aliases**: `ls`/`ll`/`la`/`tree` → `eza` con iconos, `vim` → `nvim`, `update` → `~/scripts/update.sh`, `updatef` → `~/scripts/updatef.sh`, `vpn` → `~/scripts/vpn.sh`.
+- **Comportamiento al abrir shell**: en `/dev/tty1` ejecuta `start-hyprland` (entrada directa al escritorio); en cualquier otra terminal muestra `fastfetch`.
 
-5. Asegurar que el script tmux-sessionizer es ejecutable:
+El archivo `config/zsh/.zshrc` del repositorio es la versión antigua de **Arch** (usa `yay`, `lsd`, `bat`) y se mantiene solo como referencia: **no lo enlaces en NixOS**.
 
-```sh
-chmod +x ~/dotfiles/scripts/tmux-sessionizer
-```
+### Noctalia (`config/noctalia/`)
+
+[Noctalia](https://github.com/noctalia-dev/noctalia) es la shell de escritorio basada en Quickshell que aporta barra, launcher, centro de control, lock screen, notificaciones, etc. Se instala como **input del flake** (`github:noctalia-dev/noctalia/legacy-v4`) en `flake.nix`, y su paquete añade el binario `noctalia-shell` al sistema. Se autoinicia desde `autostart.lua` de Hyprland.
+
+Contenido de `~/.config/noctalia`:
+
+| Archivo/carpeta | Descripción |
+|---|---|
+| `settings.json` | Ajustes completos: barra flotante arriba (en `DP-1`, `DP-2`, `HDMI-A-1`), launcher (posición, iconos, portapapeles), audio, lock screen, etc. |
+| `colors.json` | Paleta de colores activa (tema monocromo actual) |
+| `colorschemes/` | Esquemas de color disponibles: `yasai` (personal), `Cherry Blossom`, `Cream`, `Noir` |
+| `plugins.json` + `plugins/` | Plugins instalados y su código: `clipper` (portapapeles/notas), `kaomoji-provider`, `network-manager-vpn`, `polkit-agent`, `privacy-indicator`, `screen-shot-and-record`, `usb-drive-manager` |
+| `user-templates.toml` | Plantillas para propagar el tema de Noctalia a otras apps |
+
+**Integración de temas**: al cambiar el colorscheme desde los ajustes de Noctalia (`SUPER + ,`), la shell regenera automáticamente:
+
+- `~/.config/kitty/current-theme.conf` (Kitty lo incluye en su `kitty.conf`).
+- `~/.config/hypr/noctalia/noctalia-colors.lua` / `.conf` (colores de Hyprland). Para aplicarlos a los bordes de Hyprland, descomenta el `dofile(...)` del final de `hyprland.lua`.
 
 ---
 
-## Hardware de referencia
+## Actualización del sistema
 
-| Componente | Modelo |
-|-----------|--------|
-| GPU | NVIDIA RTX 3070 |
-| Monitor principal | DP-2 (2560x1440@165Hz) |
-| Monitor secundario | DP-1 (1080p@144Hz) |
-| Monitor terciario | HDMI-A-1 (1080p@60Hz, rotado) |
-| Mouse | Razer DeathAdder Essential |
+Con los aliases definidos en zsh (requiere el symlink `~/scripts`):
+
+```bash
+update    # copia configuration.nix a /etc/nixos y hace nixos-rebuild switch
+updatef   # copia configuration.nix + flake.nix y hace nixos-rebuild switch --flake /etc/nixos
+```
+
+O manualmente:
+
+```bash
+cd ~/.dotfiles && git pull
+sudo cp config/nixos/configuration.nix config/nixos/flake.nix /etc/nixos/
+sudo nixos-rebuild switch --flake /etc/nixos#nixos
+```
+
+Tras cambiar cualquier archivo de `config/hypr/`, recarga la configuración con `hyprctl reload` o cierra y reabre la sesión.

@@ -1,10 +1,16 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$REPO_DIR/config"
+NIXOS_CONFIG_DIR="$CONFIG_DIR/nixos"
+ETC_NIXOS="/etc/nixos"
+NIX_CONF="/etc/nix/nix.conf"
 BACKUP_DIR="$HOME/.config/dotfiles-backup-$(date +%Y%m%d_%H%M%S)"
+ETC_BACKUP_DIR="$ETC_NIXOS/dotfiles-backup-$(date +%Y%m%d_%H%M%S)"
+
+# Dotfiles que se enlazan en ~/.config
+DOTFILES_DIRS=(hypr kitty fastfetch nvim noctalia)
 
 BOLD='\033[1m'
 RED='\033[31m'
@@ -23,47 +29,10 @@ print_banner() {
     echo -e "${CYAN}"
     cat <<'EOF'
   ╔═══════════════════════════════════════╗
-  ║          dotfiles installer           ║
+  ║      dotfiles installer - NixOS       ║
   ╚═══════════════════════════════════════╝
 EOF
     echo -e "${NC}"
-}
-
-detect_aur_helper() {
-    if command -v paru &>/dev/null; then
-        echo "paru"
-    elif command -v yay &>/dev/null; then
-        echo "yay"
-    else
-        echo "pacman"
-    fi
-}
-
-is_installed() {
-    pacman -Qi "$1" &>/dev/null
-}
-
-install_packages() {
-    local helper="$1"
-    shift
-    local pkgs=()
-    for pkg in "$@"; do
-        if ! is_installed "$pkg"; then
-            pkgs+=("$pkg")
-        fi
-    done
-
-    if [[ ${#pkgs[@]} -eq 0 ]]; then
-        success "Todos los paquetes ya estan instalados"
-        return
-    fi
-
-    info "Instalando: ${pkgs[*]}"
-    if [[ "$helper" == "pacman" ]]; then
-        sudo pacman -S --needed --noconfirm "${pkgs[@]}"
-    else
-        "$helper" -S --needed --noconfirm "${pkgs[@]}"
-    fi
 }
 
 ask_yes_no() {
@@ -81,26 +50,60 @@ ask_yes_no() {
     done
 }
 
-ask_option() {
-    local prompt="$1"
-    shift
-    local options=("$@")
-    echo -e "\n${BOLD}${prompt}${NC}"
-    echo "-----------------------------------"
-    for i in "${!options[@]}"; do
-        echo -e "  ${GREEN}$((i+1)))${NC} ${options[$i]}"
+check_environment() {
+    grep -qi '^ID=nixos' /etc/os-release \
+        || error "Este instalador es para NixOS (la version para Arch esta en el historial de git)"
+    [[ $EUID -eq 0 ]] && error "No ejecutes el script como root: los symlinks deben crearse en tu HOME"
+    command -v sudo &>/dev/null || error "sudo no esta disponible"
+    [[ -f "$NIXOS_CONFIG_DIR/configuration.nix" ]] || error "Falta $NIXOS_CONFIG_DIR/configuration.nix"
+    [[ -f "$NIXOS_CONFIG_DIR/flake.nix" ]] || error "Falta $NIXOS_CONFIG_DIR/flake.nix"
+    if [[ "$USER" != "yasai" ]]; then
+        warn "Usuario actual: '$USER'. configuration.nix y varias configs usan rutas de /home/yasai; revisalo antes del rebuild."
+    fi
+    success "Entorno NixOS detectado"
+}
+
+copy_nixos_config() {
+    if [[ ! -f "$ETC_NIXOS/hardware-configuration.nix" ]]; then
+        error "Falta $ETC_NIXOS/hardware-configuration.nix. Ese archivo lo genera el instalador de NixOS (no esta en el repo). Instala NixOS base primero."
+    fi
+
+    sudo mkdir -p "$ETC_NIXOS"
+
+    local f
+    for f in configuration.nix flake.nix; do
+        if [[ -f "$ETC_NIXOS/$f" ]]; then
+            sudo mkdir -p "$ETC_BACKUP_DIR"
+            sudo cp "$ETC_NIXOS/$f" "$ETC_BACKUP_DIR/"
+            info "Backup: $f -> $ETC_BACKUP_DIR/"
+        fi
+        sudo cp "$NIXOS_CONFIG_DIR/$f" "$ETC_NIXOS/$f"
+        success "Copiado $f a $ETC_NIXOS/"
     done
-    echo "-----------------------------------"
-    local choice
-    while true; do
-        echo -en "${YELLOW}? Elige una opcion [1-${#options[@]}]: ${NC}"
-        read -r choice
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le "${#options[@]}" ]]; then
-            echo "$choice"
+
+    info "hardware-configuration.nix se conserva (no se sobrescribe nunca)"
+}
+
+ensure_flakes() {
+    if grep -qs '^experimental-features' "$NIX_CONF"; then
+        if grep -qs '^experimental-features.*flakes' "$NIX_CONF"; then
+            success "Flakes ya activados en $NIX_CONF"
             return
         fi
-        warn "Opcion invalida"
-    done
+        info "Anadiendo flakes a experimental-features en $NIX_CONF..."
+        sudo sed -i 's/^experimental-features.*/experimental-features = nix-command flakes/' "$NIX_CONF"
+    else
+        info "Activando flakes en $NIX_CONF (necesario para el primer build)..."
+        sudo mkdir -p /etc/nix
+        echo "experimental-features = nix-command flakes" | sudo tee -a "$NIX_CONF" >/dev/null
+    fi
+    success "Flakes activados (nix-command flakes)"
+}
+
+rebuild() {
+    info "Ejecutando nixos-rebuild switch (la primera vez puede tardar bastante)..."
+    sudo nixos-rebuild switch --flake "$ETC_NIXOS#nixos"
+    success "Sistema reconstruido"
 }
 
 backup_existing() {
@@ -117,261 +120,98 @@ backup_existing() {
 create_symlink() {
     local source="$1"
     local target="$2"
+    if [[ -L "$target" && "$(readlink "$target")" == "$source" ]]; then
+        success "Ya enlazado: $target"
+        return
+    fi
     backup_existing "$target"
     mkdir -p "$(dirname "$target")"
     ln -s "$source" "$target"
     success "ln -s $source -> $target"
 }
 
-make_executable() {
-    find "$1" -type f \( -name "*.sh" -o -name "bspwmrc" -o -name "init" -o -name "tmux-sessionizer" -o -name "sxhkdrc" \) -exec chmod +x {} \; 2>/dev/null || true
-}
-
-install_oh_my_zsh() {
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
-        success "Oh My Zsh ya esta instalado"
-        return
-    fi
-    info "Instalando Oh My Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-}
-
-install_zsh_plugins() {
-    local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
-    if [[ ! -d "$zsh_custom/zsh-autosuggestions" ]]; then
-        info "Instalando zsh-autosuggestions..."
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_custom/zsh-autosuggestions"
-    else
-        success "zsh-autosuggestions ya instalado"
-    fi
-    if [[ ! -d "$zsh_custom/zsh-syntax-highlighting" ]]; then
-        info "Instalando zsh-syntax-highlighting..."
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting "$zsh_custom/zsh-syntax-highlighting"
-    else
-        success "zsh-syntax-highlighting ya instalado"
-    fi
-}
-
-install_fonts() {
-    info "Instalando fuentes del sistema..."
-    local helper
-    helper=$(detect_aur_helper)
-    install_packages "$helper" \
-        ttf-freefont ttf-dejavu ttf-inconsolata ttf-ubuntu-font-family \
-        noto-fonts-cjk noto-fonts-emoji noto-fonts
-
-    info "Instalando FiraMono Nerd Font (bundled)..."
-    local font_dir="$HOME/.local/share/fonts/firaMono"
-    if [[ ! -d "$font_dir" ]] || [[ -z "$(ls -A "$font_dir" 2>/dev/null)" ]]; then
-        mkdir -p "$font_dir"
-        cp "$REPO_DIR/fonts/firaMono/"*.otf "$font_dir/"
-        fc-cache -fv "$font_dir" >/dev/null 2>&1
-        success "FiraMono Nerd Font instalada"
-    else
-        success "FiraMono Nerd Font ya instalada"
-    fi
-
-    info "Instalando fuentes adicionales..."
-    install_packages "$helper" ttf-jetbrains-mono ttf-figtree 2>/dev/null || \
-        warn "Algunas fuentes pueden no estar en los repos. Instalalas manualmente si es necesario."
-}
-
-install_theme() {
-    local theme_dir="$HOME/.themes/AtomOneDarkTheme-main"
-    if [[ -d "$theme_dir" ]]; then
-        success "Tema Atom One Dark ya instalado"
-        return
-    fi
-    mkdir -p "$HOME/.themes"
-    cp -r "$REPO_DIR/themes/AtomOneDarkTheme-main" "$HOME/.themes/"
-    success "Tema Atom One Dark instalado en ~/.themes/"
-}
-
-declare -A WM_PACKAGES=(
-    ["hyprland"]="hyprland hyprlock kitty waybar dunst rofi"
-    ["bspwm"]="bspwm sxhkd kitty polybar picom dunst rofi nitrogen lxappearance"
-    ["i3"]="i3-wm kitty polybar picom dunst rofi nitrogen"
-    ["river"]="river kitty"
-)
-
-declare -A WM_SYMLINKS=(
-    ["hyprland"]="hypr kitty waybar dunst rofi fastfetch fontconfig nvim"
-    ["bspwm"]="bspwm sxhkd kitty polybar picom dunst rofi fastfetch fontconfig nvim"
-    ["i3"]="i3 kitty polybar picom dunst rofi fastfetch fontconfig nvim"
-    ["river"]="river kitty fastfetch fontconfig nvim"
-)
-
-X11_EXTRAS="polybar picom rofi dunst nitrogen flameshot"
-WAYLAND_EXTRAS="waybar dunst rofi grimblast wpctl brightnessctl playerctl pamixer"
-
-COMMON_PACKAGES="zsh neovim ripgrep fd fzf tmux lsd bat fastfetch thunar \
-    xdg-user-dirs xdotool curl git unzip"
-
-NVIDIA_PACKAGES="nvidia-dkms nvidia-utils lib32-nvidia-utils nvidia-settings egl-wayland"
-
-main() {
-    print_banner
-
-    local helper
-    helper=$(detect_aur_helper)
-    info "AUR helper detectado: ${BOLD}$helper${NC}"
-
-    if [[ "$helper" == "pacman" ]]; then
-        warn "No se detecto paru ni yay. Se usara pacman (no podra instalar paquetes AUR)."
-        if ! ask_yes_no "Continuar de todos modos?" "n"; then
-            exit 0
-        fi
-    fi
-
-    local wm
-    wm=$(ask_option "Que window manager / compositor quieres instalar?" \
-        "Hyprland (Wayland)" \
-        "bspwm (X11)" \
-        "i3 (X11)" \
-        "river (Wayland)" \
-        "Todos")
-
-    local wm_names=()
-    case "$wm" in
-        1) wm_names=("hyprland") ;;
-        2) wm_names=("bspwm") ;;
-        3) wm_names=("i3") ;;
-        4) wm_names=("river") ;;
-        5) wm_names=("hyprland" "bspwm" "i3" "river") ;;
-    esac
-
-    info "Se instalaran los dotfiles para: ${BOLD}${wm_names[*]}${NC}"
-
-    echo ""
-    echo -e "${BOLD}--- Paquetes ---${NC}"
-
-    local all_packages=()
-    for w in "${wm_names[@]}"; do
-        read -ra pkgs <<< "${WM_PACKAGES[$w]}"
-        all_packages+=("${pkgs[@]}")
-    done
-
-    all_packages+=(${COMMON_PACKAGES})
-
-    local unique_packages=()
-    local seen=()
-    for pkg in "${all_packages[@]}"; do
-        local found=0
-        for s in "${seen[@]+"${seen[@]}"}"; do
-            if [[ "$s" == "$pkg" ]]; then found=1; break; fi
-        done
-        if [[ $found -eq 0 ]]; then
-            unique_packages+=("$pkg")
-            seen+=("$pkg")
-        fi
-    done
-
-    install_packages "$helper" "${unique_packages[@]}"
-
-    for w in "${wm_names[@]}"; do
-        case "$w" in
-            hyprland)
-                info "Instalando extras Wayland..."
-                install_packages "$helper" ${WAYLAND_EXTRAS}
-                ;;
-            bspwm|i3)
-                info "Instalando extras X11..."
-                install_packages "$helper" ${X11_EXTRAS}
-                ;;
-        esac
-    done
-
-    echo ""
-    echo -e "${BOLD}--- NVIDIA ---${NC}"
-    if lspci | grep -qi nvidia; then
-        if ask_yes_no "Detectada GPU NVIDIA. Instalar drivers NVIDIA?" "y"; then
-            install_packages "$helper" ${NVIDIA_PACKAGES}
-        fi
-    else
-        info "No se detecto GPU NVIDIA, saltando drivers"
-    fi
-
-    echo ""
-    echo -e "${BOLD}--- Fuentes ---${NC}"
-    install_fonts
-
-    echo ""
-    echo -e "${BOLD}--- Tema GTK ---${NC}"
-    install_theme
-
-    echo ""
-    echo -e "${BOLD}--- Oh My Zsh ---${NC}"
-    install_oh_my_zsh
-    install_zsh_plugins
-
-    echo ""
-    echo -e "${BOLD}--- Symlinks ---${NC}"
-
-    local configs_to_link=()
-    for w in "${wm_names[@]}"; do
-        read -ra configs <<< "${WM_SYMLINKS[$w]}"
-        for c in "${configs[@]}"; do
-            local already=0
-            for existing in "${configs_to_link[@]+"${configs_to_link[@]}"}"; do
-                if [[ "$existing" == "$c" ]]; then already=1; break; fi
-            done
-            if [[ $already -eq 0 ]]; then
-                configs_to_link+=("$c")
-            fi
-        done
-    done
-
-    for config in "${configs_to_link[@]}"; do
-        local source="$CONFIG_DIR/$config"
-        local target="$HOME/.config/$config"
-
-        if [[ "$config" == "zsh" ]]; then
-            continue
-        fi
-
+link_dotfiles() {
+    local dir
+    for dir in "${DOTFILES_DIRS[@]}"; do
+        local source="$CONFIG_DIR/$dir"
         if [[ ! -d "$source" ]]; then
             warn "No existe: $source (saltando)"
             continue
         fi
-
-        make_executable "$source"
-        create_symlink "$source" "$target"
+        create_symlink "$source" "$HOME/.config/$dir"
     done
 
-    create_symlink "$CONFIG_DIR/zsh/.zshrc" "$HOME/.zshrc"
-    success "zshrc enlazado"
+    # ~/scripts para los aliases de zsh: update, updatef y vpn
+    create_symlink "$REPO_DIR/scripts" "$HOME/scripts"
 
-    if [[ -d "$REPO_DIR/scripts" ]]; then
-        make_executable "$REPO_DIR/scripts"
-        success "Scripts marcados como ejecutables"
+    chmod +x "$REPO_DIR/scripts/"*.sh 2>/dev/null || true
+}
+
+install_nvim_plugins() {
+    if ! command -v nvim &>/dev/null; then
+        warn "nvim no esta en el PATH todavia; sus plugins se instalaran solos al abrirlo por primera vez"
+        return
     fi
+    info "Instalando plugins de Neovim (lazy.nvim)..."
+    nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
+    success "Plugins de Neovim instalados"
+}
+
+main() {
+    print_banner
+    check_environment
+
+    local do_rebuild=0
+
+    echo ""
+    echo -e "${BOLD}--- Configuracion del sistema ---${NC}"
+    if ask_yes_no "Copiar configuration.nix y flake.nix a /etc/nixos y reconstruir el sistema?" "y"; then
+        copy_nixos_config
+        ensure_flakes
+
+        echo ""
+        warn "Antes del primer build, revisa /etc/nixos/configuration.nix:"
+        echo "       usuario, hostname, GPU (hardware.nvidia), discos NTFS y paquetes personales"
+        if ask_yes_no "Continuar con nixos-rebuild switch?" "y"; then
+            do_rebuild=1
+        else
+            info "Rebuild saltado. Lanzalo cuando quieras con:"
+            echo "       sudo nixos-rebuild switch --flake /etc/nixos#nixos"
+        fi
+    else
+        info "Configuracion del sistema saltada (solo se crearan los symlinks)"
+    fi
+
+    if [[ $do_rebuild -eq 1 ]]; then
+        echo ""
+        rebuild
+    fi
+
+    echo ""
+    echo -e "${BOLD}--- Symlinks ---${NC}"
+    link_dotfiles
 
     echo ""
     echo -e "${BOLD}--- Post-instalacion ---${NC}"
-
-    info "Instalando plugins de Neovim (primera ejecucion)..."
-    if command -v nvim &>/dev/null; then
-        nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
-        success "Plugins de Neovim instalados"
-    fi
+    install_nvim_plugins
 
     echo ""
-    if [[ "$BACKUP_DIR" != "" ]] && [[ -d "$BACKUP_DIR" ]]; then
-        info "Tus configs anteriores estan en: $BACKUP_DIR"
+    if [[ -d "$BACKUP_DIR" ]]; then
+        info "Tus configs anteriores de ~/.config estan en: $BACKUP_DIR"
+    fi
+    if [[ -d "$ETC_BACKUP_DIR" ]]; then
+        info "Tus configs anteriores de /etc/nixos estan en: $ETC_BACKUP_DIR"
     fi
 
     echo ""
     echo -e "${GREEN}${BOLD}Instalacion completada!${NC}"
     echo ""
     echo -e "  ${CYAN}Proximos pasos:${NC}"
-    echo -e "  1. Cierra sesion y selecciona tu WM en el display manager"
-    echo -e "  2. Revisa los atajos de teclado en el README.md"
-    if [[ " ${wm_names[*]} " =~ " hyprland " ]]; then
-        echo -e "  3. Edita ${BOLD}~/.config/hypr/config/displays.conf${NC} para tus monitores"
-        echo -e "  4. Edita ${BOLD}~/.config/hypr/config/devices.conf${NC} para tu teclado/mouse"
-    fi
-    if [[ " ${wm_names[*]} " =~ " bspwm " ]] || [[ " ${wm_names[*]} " =~ " i3 " ]]; then
-        echo -e "  3. Edita los nombres de monitor en ${BOLD}~/.config/polybar/launch_polybar.sh${NC}"
+    echo -e "  1. Edita ${BOLD}~/.config/hypr/config/monitors.lua${NC} para tus monitores"
+    echo -e "  2. Edita ${BOLD}~/.config/hypr/config/devices.lua${NC} para tu teclado/raton"
+    echo -e "  3. Revisa ${BOLD}~/.config/hypr/config/autostart.lua${NC} (apps que se lanzan al inicio)"
+    if [[ $do_rebuild -eq 1 ]]; then
+        echo -e "  4. Reinicia e inicia sesion en la TTY1: Hyprland arranca solo"
     fi
     echo ""
 }
