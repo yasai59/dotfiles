@@ -1,14 +1,40 @@
 return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
+  dependencies = {
+    "nvim-java/nvim-java"
+  },
   config = function()
     local servers = {
       "lua_ls",
       "clangd",
       "astro",
-      "deno",
+      "hls",
+      -- "deno",
+      "ts_ls",
       "rust_analyzer",
+      "tailwindcss",
+      "jdtls"
     }
-    vim.lsp.enable(servers)
+
+    for _, server in ipairs(servers) do
+      vim.lsp.enable(server)
+    end
+
+    vim.lsp.config("emmet_language_server", {
+      filetypes = {
+        "css",
+        "html",
+        "javascript",
+        "javascriptreact",
+        "less",
+        "sass",
+        "scss",
+        "pug",
+        "typescriptreact",
+      },
+    })
+    
+    vim.lsp.enable("emmet_language_server")
   end,
 }

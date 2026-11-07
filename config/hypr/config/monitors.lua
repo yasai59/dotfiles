@@ -1,26 +1,27 @@
--- monitor
-hl.monitor({
-  output = "HDMI-A-1",
-  mode = "1920x1080@60",
-  position = "0x0",
-  scale = 1,
-  transform = 3
-})
 
+-- Monitor central 
 hl.monitor({
   output = "DP-2",
   mode = "2560x1440@165",
-  position = "1080x222",
+  position = "0x0",
   scale = 1,
 })
 
+-- Monitor derecho
 hl.monitor({
   output = "DP-1",
-  mode = "2560x1440@144",
-  position = "3640x412",
+  mode = "1920x1080@144",
+  position = "2560x190",
   scale = 1,
 })
 
+-- monitor cama
+hl.monitor({
+  output = "HDMI-A-1",
+  mode = "2560x1440@144",
+  position = "10000x0", 
+  scale = 1,
+})
 -- workspaces 
 hl.workspace_rule({
   workspace = "1",

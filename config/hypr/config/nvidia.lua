@@ -13,5 +13,9 @@ hl.env("__NV_PRIME_RENDER_OFFLOAD", "1")
 hl.config({
   opengl = {
     nvidia_anti_flicker = true,
+  },
+  cursor = {
+    no_hardware_cursors = true,
   }
 })
+

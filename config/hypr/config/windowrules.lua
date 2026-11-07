@@ -2,7 +2,7 @@ hl.window_rule({
   match = {
     class = "equibop"
   },
-  workspace = "8",
+  workspace = "6",
   no_initial_focus = true,
 })
 

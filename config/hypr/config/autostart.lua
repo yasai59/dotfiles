@@ -1,11 +1,20 @@
+local commands = {
+  "noctalia-shell",
+  "udiskie",
+  "dex -a",
+  "clipboard-sync",
+  "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP",
+  "fcitx5",
+  "xrandr --output DP-2 --primary",
+  "hyprctl setcursor Bibata-Modern-Classic 22",
+  "qpwgraph -a /home/yasai/Music/mezcla.qpwgraph -m",
+  "equibop",
+  "kdeconnect-indicator",
+}
+
+
 hl.on("hyprland.start", function ()
-  hl.exec_cmd("qs -c noctalia-shell")
-  hl.exec_cmd("udiskie")
-  hl.exec_cmd("dex --autostart")
-  hl.exec_cmd("clipboard-sync")
-  hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
-  hl.exec_cmd("/usr/lib/xdg-desktop-portal")
-  hl.exec_cmd("/usr/lib/xdg-desktop-portal-hyprland")
-  hl.exec_cmd("fcitx5")
-  hl.exec_cmd("xrandr --output DP-2 --primary")
+	for _, cmd in ipairs(commands) do
+		hl.exec_cmd(cmd)
+	end
 end)

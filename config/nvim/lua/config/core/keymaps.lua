@@ -66,3 +66,10 @@ vim.keymap.set("n", "<A-9>", "<Cmd>BufferGoto 9<CR>", opts)
 vim.keymap.set("n", "<A-0>", "<Cmd>BufferLast<CR>", opts)
 
 vim.keymap.set("n", "<A-w>", "<Cmd>BufferClose<CR>", opts)
+
+
+-- Java debug
+vim.keymap.set("n", "<leader>db", function() require("dap").toggle_breakpoint() end, { desc = "Toggle Breakpoint" })
+vim.keymap.set("n", "<F5>", function() require("dap").continue() end, { desc = "Start/Continue Debugging" })
+vim.keymap.set("n", "<F10>", function() require("dap").step_over() end, { desc = "Step Over" })
+vim.keymap.set("n", "<F11>", function() require("dap").step_into() end, { desc = "Step Into" })

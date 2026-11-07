@@ -2,8 +2,8 @@
 local mainMod = "SUPER" -- Define la tecla "Windows" como modificador principal
 local terminal = "kitty"
 local fileManager = "thunar"
-local ipc = "qs -c noctalia-shell ipc call"
-local browser = "zen-browser"
+local ipc = "noctalia-shell ipc call"
+local browser = "zen"
 
 
 -- hl.bind("ALT + SHIFT + S", hl.dsp.exec_cmd(ss_region))
