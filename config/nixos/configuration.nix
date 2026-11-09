@@ -22,9 +22,30 @@ let
       wayland
     ];
 
+    postPatch = ''
+      mkdir -p dbus-wrappers
+      cat > dbus-wrappers/dbus-run-session <<EOF
+      #!/bin/sh
+      exec ${pkgs.dbus}/bin/dbus-run-session --config-file ${pkgs.dbus}/share/dbus-1/session.conf "\$@"
+      EOF
+      chmod +x dbus-wrappers/dbus-run-session
+    '';
+
+    preConfigure = ''
+      cmakeFlagsArray+=(
+        -DDBUS_RUN_SESSION_EXECUTABLE=$PWD/dbus-wrappers/dbus-run-session
+      )
+    '';
+
     cmakeBuildType = "Release";
     dontWrapQtApps = true;
-    doCheck = true;      # ejecuta los tests del proyecto al compilar
+
+    doCheck = true;
+    checkPhase = ''
+      runHook preCheck
+      ctest -E '^portal-session-test$' --output-on-failure
+      runHook postCheck
+    '';
 
     meta = {
       description = "RemoteDesktop portal bridge for KDE Connect on Hyprland";
@@ -127,6 +148,7 @@ in
      unzip
      ripgrep
      ifuse
+     noctalia
 
      # GUI apps
      firefox
@@ -144,7 +166,6 @@ in
      gh
      uv
      gcc
-     opencode
      nodejs_26
      bun
      patchelf
@@ -167,9 +188,8 @@ in
      nwg-look
   
      # flakes
-     inputs.noctalia.packages.${pkgs.system}.default # <-- Noctalia shell
      inputs.zen-browser.packages.${pkgs.system}.default # <-- Zen Browser
-  ];
+   ];
 
   environment.pathsToLink = [ "/libexec" ];
   
@@ -190,8 +210,8 @@ in
 
   programs.thunar = {
     enable = true;
-    plugins = with pkgs.xfce; [
-      thunar-archive-plugin
+    plugins = with pkgs; [
+      thunar-archive-plugin # en nixpkgs actual está en top-level (antes pkgs.xfce)
     ];
   };
 
@@ -323,7 +343,6 @@ in
     alsa.support32Bit = true;
     pulse.enable = true;
     wireplumber.enable = true;
-    jack.enable = true;
 extraConfig.pipewire."99-mezcla-virtual" = {
     "context.modules" = [
       {
@@ -339,13 +358,13 @@ extraConfig.pipewire."99-mezcla-virtual" = {
     ];
   };
   };
-# Habilitar el descubrimiento de red para AirPlay
   services.avahi = {
     enable = true;
     nssmdns4 = true; # Permite resolver dominios .local
-    publish = {
-      enable = true;
-      userServices = true;
+    settings.publish = {
+      "disable-publishing" = false;
+      "disable-user-service-publishing" = false;
+      "publish-addresses" = true;
     };
   };
 
@@ -371,10 +390,11 @@ extraConfig.pipewire."99-mezcla-virtual" = {
       update = "/home/yasai/scripts/update.sh";
       vim = "nvim";
       ls = "eza --icons --color=always";
-      ll = "eza -lh --icons --color=always"; # Formato lista con detalles
-      la = "eza -lah --icons --color=always"; # Lista con archivos ocultos
-      tree = "eza --tree --icons"; # eza también incluye vista de árbol!
+      ll = "eza -lh --icons --color=always";
+      la = "eza -lah --icons --color=always";
+      tree = "eza --tree --icons"; 
       vpn = "/home/yasai/scripts/vpn.sh";
+      opencode = "npx @opencode/cli";
     };
 
     ohMyZsh = {

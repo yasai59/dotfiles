@@ -2,7 +2,7 @@
 
 Dotfiles personales para un entorno Linux con **Hyprland** como compositor, **Kitty** como terminal, **Noctalia** como shell de escritorio, y **Fastfetch**, **Neovim** y **Zsh** como herramientas principales.
 
-> El script `install.sh` de la raíz automatiza todo el proceso en NixOS: copia `configuration.nix` y `flake.nix` a `/etc/nixos` (conservando tu `hardware-configuration.nix` y con backup de lo anterior), activa los flakes si es el primer build, ejecuta `nixos-rebuild switch --flake` y crea los symlinks de las dotfiles. Pide confirmación antes de tocar el sistema. Los pasos manuales equivalentes se detallan a continuación.
+> El script `install.sh` de la raíz automatiza todo el proceso en NixOS: copia `configuration.nix`, `flake.nix` y `flake.lock` a `/etc/nixos` (conservando tu `hardware-configuration.nix` y con backup de lo anterior), activa los flakes si es el primer build, ejecuta `nixos-rebuild switch --flake` y crea los symlinks de las dotfiles. Pide confirmación antes de tocar el sistema. Los pasos manuales equivalentes se detallan a continuación.
 
 ---
 
@@ -12,8 +12,8 @@ Dotfiles personales para un entorno Linux con **Hyprland** como compositor, **Ki
 .dotfiles/
 ├── install.sh              # Instalador para NixOS (configs del sistema + symlinks)
 ├── scripts/                # Scripts de sistema
-│   ├── update.sh           #   Copia configuration.nix y hace nixos-rebuild switch
-│   ├── updatef.sh          #   Copia configuration.nix + flake.nix y rebuild con flake
+│   ├── update.sh           #   Aplica la config actual a /etc/nixos y rebuild (sin tocar inputs)
+│   ├── updatef.sh          #   Actualiza inputs del flake (nix flake update) + aplica config + rebuild
 │   └── vpn.sh              #   Conexión VPN (openfortivpn, personal)
 ├── fonts/firaMono/         # FiraMono Nerd Font en OTF (respaldo; en NixOS se instala por nix)
 ├── icons/                  # Temas de iconos (BreezeX-Dark, Uos...)
@@ -24,8 +24,8 @@ Dotfiles personales para un entorno Linux con **Hyprland** como compositor, **Ki
     ├── fastfetch/          # Configuración de Fastfetch
     ├── nvim/               # Configuración de Neovim (lazy.nvim)
     ├── zsh/                # .zshrc legacy de Arch (en NixOS zsh es declarativo)
-    ├── noctalia/           # Configuración de Noctalia shell (ajustes, colores, plugins)
-    ├── nixos/              # configuration.nix y flake.nix del sistema
+    ├── noctalia/           # Noctalia v5: config.toml + palettes/ (y backup de v4)
+    ├── nixos/              # configuration.nix, flake.nix y flake.lock del sistema
     ├── fontconfig/         # Config de fuentes (opcional)
     ├── rofi/               # Config de rofi (opcional)
     └── waybar/             # Config de waybar (no se usa con Noctalia)
@@ -58,8 +58,11 @@ Clona o copia este repositorio en `~/.dotfiles` (puedes hacerlo desde la ISO con
 ```bash
 sudo cp ~/.dotfiles/config/nixos/configuration.nix /etc/nixos/configuration.nix
 sudo cp ~/.dotfiles/config/nixos/flake.nix         /etc/nixos/flake.nix
+sudo cp ~/.dotfiles/config/nixos/flake.lock        /etc/nixos/flake.lock
 # NO sobrescribas /etc/nixos/hardware-configuration.nix
 ```
+
+> El `flake.lock` (versionado en el repo) fija las versiones exactas de los inputs para que el rebuild sea reproducible. Para actualizar los inputs usa `updatef` (equivale a `nix flake update` en `~/.dotfiles/config/nixos` + rebuild), y luego comitea el lock actualizado.
 
 ### 3. Personalizar antes del primer rebuild
 
@@ -85,7 +88,7 @@ echo "experimental-features = nix-command flakes" | sudo tee -a /etc/nix/nix.con
 sudo nixos-rebuild switch --flake /etc/nixos#nixos
 ```
 
-Esto instala todo el sistema: Hyprland, Kitty, Fastfetch, Neovim, Zsh (con Oh My Zsh), Noctalia (desde su flake), fuentes Nerd Fonts, PipeWire, portales XDG, drivers NVIDIA, etc.
+Esto instala todo el sistema: Hyprland, Kitty, Fastfetch, Neovim, Zsh (con Oh My Zsh), Noctalia v5 (desde nixpkgs), fuentes Nerd Fonts, PipeWire, portales XDG, drivers NVIDIA, etc.
 
 ### 5. Crear los symlinks de las dotfiles
 
@@ -139,7 +142,7 @@ config/hypr/
 └── config/
     ├── init.lua          # Carga el resto de módulos
     ├── theme.lua         # Gaps, bordes, blur, animaciones
-    ├── autostart.lua     # Programas al iniciar (noctalia-shell, fcitx5, etc.)
+    ├── autostart.lua     # Programas al iniciar (noctalia, fcitx5, etc.)
     ├── environment.lua   # Variables de entorno de la sesión
     ├── monitors.lua      # Monitores y workspaces persistentes
     ├── nvidia.lua        # Variables y ajustes NVIDIA
@@ -166,7 +169,7 @@ Atajos principales (definidos en `keybinds.lua`):
 | `SUPER + T` | Ventana flotante |
 | `ALT + SHIFT + L` | Bloquear pantalla (Noctalia) |
 | `SUPER + SHIFT + P` | Menú de sesión |
-| `ALT + SHIFT + S` | Captura de pantalla (plugin de Noctalia) |
+| `ALT + SHIFT + S` | Captura de pantalla (integrada en Noctalia v5) |
 | `ALT + SHIFT + F` | Zen Browser |
 | `ALT + SHIFT + V` | VS Code |
 | `SUPER + H/J/K/L` | Mover el foco (estilo Vim) |
@@ -235,24 +238,27 @@ En NixOS la shell no se configura con `.zshrc` sino con el módulo `programs.zsh
 
 El archivo `config/zsh/.zshrc` del repositorio es la versión antigua de **Arch** (usa `yay`, `lsd`, `bat`) y se mantiene solo como referencia: **no lo enlaces en NixOS**.
 
-### Noctalia (`config/noctalia/`)
+### Noctalia v5 (`config/noctalia/`)
 
-[Noctalia](https://github.com/noctalia-dev/noctalia) es la shell de escritorio basada en Quickshell que aporta barra, launcher, centro de control, lock screen, notificaciones, etc. Se instala como **input del flake** (`github:noctalia-dev/noctalia/legacy-v4`) en `flake.nix`, y su paquete añade el binario `noctalia-shell` al sistema. Se autoinicia desde `autostart.lua` de Hyprland.
+[Noctalia](https://noctalia.dev) es la shell de escritorio que aporta barra, launcher, centro de control, lock screen, notificaciones, dock, etc. La **v5** se instala desde **nixpkgs** (paquete `noctalia`, binario `noctalia`), se autoinicia desde `autostart.lua` de Hyprland y su IPC es `noctalia msg <comando>`.
 
 Contenido de `~/.config/noctalia`:
 
 | Archivo/carpeta | Descripción |
 |---|---|
-| `settings.json` | Ajustes completos: barra flotante arriba (en `DP-1`, `DP-2`, `HDMI-A-1`), launcher (posición, iconos, portapapeles), audio, lock screen, etc. |
-| `colors.json` | Paleta de colores activa (tema monocromo actual) |
-| `colorschemes/` | Esquemas de color disponibles: `yasai` (personal), `Cherry Blossom`, `Cream`, `Noir` |
-| `plugins.json` + `plugins/` | Plugins instalados y su código: `clipper` (portapapeles/notas), `kaomoji-provider`, `network-manager-vpn`, `polkit-agent`, `privacy-indicator`, `screen-shot-and-record`, `usb-drive-manager` |
-| `user-templates.toml` | Plantillas para propagar el tema de Noctalia a otras apps |
+| `config.toml` | Configuración base en **TOML** (tema, wallpapers). Los cambios hechos desde la GUI se guardan en `~/.local/state/noctalia/settings.toml`, que tiene prioridad sobre este fichero |
+| `palettes/` | Paletas de color (mismo formato JSON que los antiguos colorschemes de v4): `Noir` (la activa), `yasai`, `Cherry Blossom`, `Cream` |
+| `v4/` | Backup de la configuración de Noctalia v4 (settings.json, colorschemes, plugins...), solo como referencia |
 
-**Integración de temas**: al cambiar el colorscheme desde los ajustes de Noctalia (`SUPER + ,`), la shell regenera automáticamente:
+Notas de la migración v4 → v5:
 
-- `~/.config/kitty/current-theme.conf` (Kitty lo incluye en su `kitty.conf`).
-- `~/.config/hypr/noctalia/noctalia-colors.lua` / `.conf` (colores de Hyprland). Para aplicarlos a los bordes de Hyprland, descomenta el `dofile(...)` del final de `hyprland.lua`.
+- El binario pasó de `noctalia-shell` a `noctalia`, y el IPC de `noctalia-shell ipc call ...` a `noctalia msg ...` (ver `keybinds.lua`).
+- Los plugins de v4 `clipper` (portapapeles), `screen-shot-and-record` (capturas), `polkit-agent` y `kaomoji-provider` (launcher con prefijo `/emo`) ahora son funciones integradas de v5.
+- La barra por defecto de v5 ya es superior con un layout similar al de v4 (launcher+workspaces | reloj | bandeja/volumen/batería); los ajustes finos por monitor se hacen desde la GUI (`SUPER + ,`).
+- Comandos útiles: `noctalia config validate` (validar config), `noctalia config export full` (ver la config efectiva y sus claves exactas), `noctalia msg --help` (lista de comandos IPC).
+- La integración de temas con Kitty (`current-theme.conf`) y los colores de Hyprland que generaba v4 ya no se regeneran solos: reactívala desde Ajustes → App Theming de v5 si la quieres.
+
+Docs: <https://docs.noctalia.dev/noctalia/v5.4.1/>
 
 ---
 

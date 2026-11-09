@@ -71,7 +71,7 @@ copy_nixos_config() {
     sudo mkdir -p "$ETC_NIXOS"
 
     local f
-    for f in configuration.nix flake.nix; do
+    for f in configuration.nix flake.nix flake.lock; do
         if [[ -f "$ETC_NIXOS/$f" ]]; then
             sudo mkdir -p "$ETC_BACKUP_DIR"
             sudo cp "$ETC_NIXOS/$f" "$ETC_BACKUP_DIR/"

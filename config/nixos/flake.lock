@@ -1,0 +1,65 @@
+{
+  "nodes": {
+    "hypr-kdeconnect-fix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793943617,
+        "narHash": "sha256-7z92WekZYESyo/5keLlT2DmpuE6uNaYShKu0ROn7/3E=",
+        "owner": "gfhdhytghd",
+        "repo": "hypr-kdeconnect-fix",
+        "rev": "d1c1216dd56aefc8fa096abe214e2c68a8e1b3c0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gfhdhytghd",
+        "repo": "hypr-kdeconnect-fix",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1793876309,
+        "narHash": "sha256-Wojg9lIH/hDH91iDVH2/EPw8oDSpxjxhXONbU1yf4Zg=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "f9a75f41be3a74eab55d3a7679d34ad6cc0da977",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "hypr-kdeconnect-fix": "hypr-kdeconnect-fix",
+        "nixpkgs": "nixpkgs",
+        "zen-browser": "zen-browser"
+      }
+    },
+    "zen-browser": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794048739,
+        "narHash": "sha256-soIwkenBdT+xSXv9iARxkGuyrq4/kF1u2vXK811LFUM=",
+        "owner": "youwen5",
+        "repo": "zen-browser-flake",
+        "rev": "590d492da41cab84758361ef15d504c966f35474",
+        "type": "github"
+      },
+      "original": {
+        "owner": "youwen5",
+        "repo": "zen-browser-flake",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

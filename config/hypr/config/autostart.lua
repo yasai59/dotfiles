@@ -1,5 +1,5 @@
 local commands = {
-  "noctalia-shell",
+  "noctalia",  -- Noctalia v5 (paquete de nixpkgs; antes noctalia-shell del flake v4)
   "udiskie",
   "dex -a",
   "clipboard-sync",

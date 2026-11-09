@@ -1,12 +1,26 @@
 #!/usr/bin/env zsh
+#
+# updatef: actualiza los inputs del flake (nixpkgs, noctalia, zen-browser,
+#          hypr-kdeconnect-fix...), aplica la configuración a /etc/nixos
+#          y reconstruye NixOS.
+#
+#          El flake.lock actualizado queda versionado en las dotfiles:
+#          tras el rebuild, haz `git add config/nixos/flake.lock && git commit`.
 
+set -e
 
-echo "Copying files... please enter your password"
+DOTFILES_NIXOS="$HOME/.dotfiles/config/nixos"
+ETC_NIXOS="/etc/nixos"
 
-sudo cp /home/yasai/.dotfiles/config/nixos/configuration.nix /etc/nixos/configuration.nix
-sudo cp /home/yasai/.dotfiles/config/nixos/flake.nix /etc/nixos/flake.nix
+echo "Updating flake inputs..."
+( cd "$DOTFILES_NIXOS" && nix flake update )
+
+echo "Copiando configuración a /etc/nixos... please enter your password"
+sudo cp "$DOTFILES_NIXOS/configuration.nix" "$ETC_NIXOS/configuration.nix"
+sudo cp "$DOTFILES_NIXOS/flake.nix"         "$ETC_NIXOS/flake.nix"
+sudo cp "$DOTFILES_NIXOS/flake.lock"        "$ETC_NIXOS/flake.lock"
 
 echo "==================================================="
 echo "                     UPDATING"
 echo "==================================================="
-sudo nixos-rebuild switch --flake /etc/nixos
+sudo nixos-rebuild switch --flake "$ETC_NIXOS#nixos"

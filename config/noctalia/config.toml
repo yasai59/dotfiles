@@ -1,0 +1,35 @@
+# ============================================================
+# Noctalia v5 — configuración base (migrada desde v4)
+#
+# Noctalia v5 lee todos los *.toml de este directorio (los JSON
+# de v4 están en ./v4/ como referencia y aquí ya no se usan).
+#
+# - Lo que cambies desde la GUI se guarda en
+#   ~/.local/state/noctalia/settings.toml y TIENE prioridad
+#   sobre este fichero.
+# - Validar cambios:      noctalia config validate
+# - Ver config efectiva:  noctalia config export full
+#
+# Docs: https://docs.noctalia.dev/noctalia/v5.4.1/
+# ============================================================
+
+# Tema: migrado de v4 (colorSchemes: predefinedScheme "Noir", darkMode,
+# syncGsettings). Las paletas están en ./palettes/ (formato idéntico a los
+# antiguos colorschemes de v4).
+[theme]
+mode = "dark"
+source = "custom"
+custom_palette = "Noir"
+sync_color_scheme = true
+
+# Fondos de pantalla: migrado de v4 (wallpaper.directory). El proveedor
+# /wall del launcher y la automatización usan este directorio.
+[wallpaper]
+enabled = true
+directory = "/home/yasai/Pictures/Wallpapers"
+
+# Nota: la barra por defecto de v5 ya es superior y con el layout parecido
+# al de v4 (launcher+workspaces | reloj | bandeja/red/volumen/batería...).
+# Ajustes finos (widgets por monitor, formato del reloj "hh mm", etc.):
+# GUI de Ajustes de Noctalia o ver claves exactas con
+#   noctalia config export full | grep -A 20 "bar.default"
